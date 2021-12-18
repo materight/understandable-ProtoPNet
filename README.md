@@ -1,1 +1,1 @@
-# explainable-ProtoPNet
+# Explainable ProtoPNet
