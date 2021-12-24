@@ -21,6 +21,7 @@ cfg = {
     'E': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512, 512, 'M'],
 }
 
+
 class VGG_features(nn.Module):
 
     def __init__(self, cfg, batch_norm=False, init_weights=True):
@@ -98,7 +99,6 @@ class VGG_features(nn.Module):
         template = 'VGG{}, batch_norm={}'
         return template.format(self.num_layers() + 3,
                                self.batch_norm)
-
 
 
 def vgg11_features(pretrained=False, **kwargs):

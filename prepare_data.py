@@ -1,4 +1,5 @@
-import os, shutil
+import os
+import shutil
 import gdown
 import tarfile
 from tqdm import tqdm
@@ -27,16 +28,18 @@ print('Cropping images...')
 os.makedirs(f'{OUTPUT_FOLDER}/train_cropped', exist_ok=True)
 img_count = 0
 with open(f'{DATASETS_FOLDER}/tmp/CUB_200_2011/images.txt') as f:
-    for line in f: img_count += 1
+    for line in f:
+        img_count += 1
 with open(f'{DATASETS_FOLDER}/tmp/CUB_200_2011/images.txt') as images_file, \
-     open(f'{DATASETS_FOLDER}/tmp/CUB_200_2011/bounding_boxes.txt') as bboxes_file, \
-     open(f'{DATASETS_FOLDER}/tmp/CUB_200_2011/train_test_split.txt') as split_file:
+        open(f'{DATASETS_FOLDER}/tmp/CUB_200_2011/bounding_boxes.txt') as bboxes_file, \
+        open(f'{DATASETS_FOLDER}/tmp/CUB_200_2011/train_test_split.txt') as split_file:
     for images_line, bboxes_line, split_line in tqdm(zip(images_file, bboxes_file, split_file), total=img_count):
         # Read lines
         id1, path = images_line.strip().split(' ')
         id2, x, y, w, h = [int(float(x)) for x in bboxes_line.strip().split(' ')]
         id3, is_training = split_line.strip().split(' ')
-        if int(id1) != int(id2) or int(id1) != int(id3): raise ValueError(f'Ids in images.txt and bounding_boxes.txt do not match for {id1}, {id2} and {id3}.')
+        if int(id1) != int(id2) or int(id1) != int(id3):
+            raise ValueError(f'Ids in images.txt and bounding_boxes.txt do not match for {id1}, {id2} and {id3}.')
         # Crop image
         img = Image.open(f'{DATASETS_FOLDER}/tmp/CUB_200_2011/images/{path}')
         cropped = img.crop((x, y, x + w, y + h))
@@ -51,5 +54,4 @@ print('Augmenting data...')
 augment_data(OUTPUT_FOLDER, 'train_cropped', 'train_cropped_augmented')
 
 # Clean up
-os.symlink('../datasets', './model/datasets')
 shutil.rmtree(TMP_FOLDER)

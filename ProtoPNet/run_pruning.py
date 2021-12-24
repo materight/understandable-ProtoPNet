@@ -1,3 +1,4 @@
+from settings import train_dir, test_dir, train_push_dir
 import os
 import shutil
 
@@ -8,14 +9,10 @@ import torchvision.datasets as datasets
 
 import argparse
 
-from helpers import makedir
-import model
-import push
-import prune
-import train_and_test as tnt
-import save
-from log import create_logger
-from preprocess import mean, std, preprocess_input_function
+from .helpers import makedir
+from . import model, push, prune, train_and_test as tnt, save
+from .log import create_logger
+from .preprocess import mean, std, preprocess_input_function
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-gpuid', nargs=1, type=str, default='0')
@@ -31,12 +28,12 @@ optimize_last_layer = True
 k = 6
 prune_threshold = 3
 
-original_model_dir = args.modeldir[0] #'./saved_models/densenet161/003/'
-original_model_name = args.model[0] #'10_16push0.8007.pth'
+original_model_dir = args.modeldir[0]  # './saved_models/densenet161/003/'
+original_model_name = args.model[0]  # '10_16push0.8007.pth'
 
 need_push = ('nopush' in original_model_name)
 if need_push:
-    assert(False) # pruning must happen after push
+    assert(False)  # pruning must happen after push
 else:
     epoch = original_model_name.split('push')[0]
 
@@ -46,8 +43,8 @@ else:
     epoch = int(epoch)
 
 model_dir = os.path.join(original_model_dir, 'pruned_prototypes_epoch{}_k{}_pt{}'.format(epoch,
-                                          k,
-                                          prune_threshold))
+                                                                                         k,
+                                                                                         prune_threshold))
 makedir(model_dir)
 shutil.copy(src=os.path.join(os.getcwd(), __file__), dst=model_dir)
 
@@ -59,7 +56,6 @@ ppnet_multi = torch.nn.DataParallel(ppnet)
 class_specific = True
 
 # load the data
-from settings import train_dir, test_dir, train_push_dir
 
 train_batch_size = 80
 test_batch_size = 100
@@ -107,7 +103,7 @@ train_push_dataset = datasets.ImageFolder(
 train_push_loader = torch.utils.data.DataLoader(
     train_push_dataset, batch_size=train_push_batch_size, shuffle=False,
     num_workers=4, pin_memory=False)
-    
+
 log('push set size: {0}'.format(len(train_push_loader.dataset)))
 
 tnt.test(model=ppnet_multi, dataloader=test_loader,
@@ -119,10 +115,10 @@ prune.prune_prototypes(dataloader=train_push_loader,
                        prototype_network_parallel=ppnet_multi,
                        k=k,
                        prune_threshold=prune_threshold,
-                       preprocess_input_function=preprocess_input_function, # normalize
+                       preprocess_input_function=preprocess_input_function,  # normalize
                        original_model_dir=original_model_dir,
                        epoch_number=epoch,
-                       #model_name=None,
+                       # model_name=None,
                        log=log,
                        copy_prototype_imgs=True)
 accu = tnt.test(model=ppnet_multi, dataloader=test_loader,

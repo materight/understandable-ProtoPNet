@@ -1,7 +1,8 @@
 import time
 import torch
 
-from helpers import list_of_distances, make_one_hot
+from .helpers import list_of_distances, make_one_hot
+
 
 def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l1_mask=True,
                    coefs=None, log=print):
@@ -42,7 +43,7 @@ def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l
 
                 # prototypes_of_correct_class is a tensor of shape batch_size * num_prototypes
                 # calculate cluster cost
-                prototypes_of_correct_class = torch.t(model.module.prototype_class_identity[:,label]).cuda()
+                prototypes_of_correct_class = torch.t(model.module.prototype_class_identity[:, label]).cuda()
                 inverted_distances, _ = torch.max((max_dist - min_distances) * prototypes_of_correct_class, dim=1)
                 cluster_cost = torch.mean(max_dist - inverted_distances)
 
@@ -56,12 +57,12 @@ def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l
                 avg_separation_cost = \
                     torch.sum(min_distances * prototypes_of_wrong_class, dim=1) / torch.sum(prototypes_of_wrong_class, dim=1)
                 avg_separation_cost = torch.mean(avg_separation_cost)
-                
+
                 if use_l1_mask:
                     l1_mask = 1 - torch.t(model.module.prototype_class_identity).cuda()
                     l1 = (model.module.last_layer.weight * l1_mask).norm(p=1)
                 else:
-                    l1 = model.module.last_layer.weight.norm(p=1) 
+                    l1 = model.module.last_layer.weight.norm(p=1)
 
             else:
                 min_distance, _ = torch.min(min_distances, dim=1)
@@ -84,16 +85,16 @@ def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l
             if class_specific:
                 if coefs is not None:
                     loss = (coefs['crs_ent'] * cross_entropy
-                          + coefs['clst'] * cluster_cost
-                          + coefs['sep'] * separation_cost
-                          + coefs['l1'] * l1)
+                            + coefs['clst'] * cluster_cost
+                            + coefs['sep'] * separation_cost
+                            + coefs['l1'] * l1)
                 else:
                     loss = cross_entropy + 0.8 * cluster_cost - 0.08 * separation_cost + 1e-4 * l1
             else:
                 if coefs is not None:
                     loss = (coefs['crs_ent'] * cross_entropy
-                          + coefs['clst'] * cluster_cost
-                          + coefs['l1'] * l1)
+                            + coefs['clst'] * cluster_cost
+                            + coefs['l1'] * l1)
                 else:
                     loss = cross_entropy + 0.8 * cluster_cost + 1e-4 * l1
             optimizer.zero_grad()
@@ -108,7 +109,7 @@ def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l
 
     end = time.time()
 
-    log('\ttime: \t{0}'.format(end -  start))
+    log('\ttime: \t{0}'.format(end - start))
     log('\tcross ent: \t{0}'.format(total_cross_entropy / n_batches))
     log('\tcluster: \t{0}'.format(total_cluster_cost / n_batches))
     if class_specific:
@@ -126,7 +127,7 @@ def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l
 
 def train(model, dataloader, optimizer, class_specific=False, coefs=None, log=print):
     assert(optimizer is not None)
-    
+
     log('\ttrain')
     model.train()
     return _train_or_test(model=model, dataloader=dataloader, optimizer=optimizer,
@@ -148,7 +149,7 @@ def last_only(model, log=print):
     model.module.prototype_vectors.requires_grad = False
     for p in model.module.last_layer.parameters():
         p.requires_grad = True
-    
+
     log('\tlast layer')
 
 
@@ -160,7 +161,7 @@ def warm_only(model, log=print):
     model.module.prototype_vectors.requires_grad = True
     for p in model.module.last_layer.parameters():
         p.requires_grad = True
-    
+
     log('\twarm')
 
 
@@ -172,5 +173,5 @@ def joint(model, log=print):
     model.module.prototype_vectors.requires_grad = True
     for p in model.module.last_layer.parameters():
         p.requires_grad = True
-    
+
     log('\tjoint')

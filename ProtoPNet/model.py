@@ -3,12 +3,11 @@ import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
 import torch.nn.functional as F
 
-from resnet_features import resnet18_features, resnet34_features, resnet50_features, resnet101_features, resnet152_features
-from densenet_features import densenet121_features, densenet161_features, densenet169_features, densenet201_features
-from vgg_features import vgg11_features, vgg11_bn_features, vgg13_features, vgg13_bn_features, vgg16_features, vgg16_bn_features,\
-                         vgg19_features, vgg19_bn_features
+from .resnet_features import resnet18_features, resnet34_features, resnet50_features, resnet101_features, resnet152_features
+from .densenet_features import densenet121_features, densenet161_features, densenet169_features, densenet201_features
+from .vgg_features import vgg11_features, vgg11_bn_features, vgg13_features, vgg13_bn_features, vgg16_features, vgg16_bn_features, vgg19_features, vgg19_bn_features
 
-from receptive_field import compute_proto_layer_rf_info_v2
+from .receptive_field import compute_proto_layer_rf_info_v2
 
 base_architecture_to_features = {'resnet18': resnet18_features,
                                  'resnet34': resnet34_features,
@@ -28,6 +27,7 @@ base_architecture_to_features = {'resnet18': resnet18_features,
                                  'vgg19': vgg19_features,
                                  'vgg19_bn': vgg19_bn_features}
 
+
 class PPNet(nn.Module):
 
     def __init__(self, features, img_size, prototype_shape,
@@ -41,7 +41,7 @@ class PPNet(nn.Module):
         self.num_prototypes = prototype_shape[0]
         self.num_classes = num_classes
         self.epsilon = 1e-4
-        
+
         # prototype_activation_function could be 'log', 'linear',
         # or a generic function that converts distance to similarity score
         self.prototype_activation_function = prototype_activation_function
@@ -100,8 +100,8 @@ class PPNet(nn.Module):
                 nn.ReLU(),
                 nn.Conv2d(in_channels=self.prototype_shape[1], out_channels=self.prototype_shape[1], kernel_size=1),
                 nn.Sigmoid()
-                )
-        
+            )
+
         self.prototype_vectors = nn.Parameter(torch.rand(self.prototype_shape),
                                               requires_grad=True)
 
@@ -111,7 +111,7 @@ class PPNet(nn.Module):
                                  requires_grad=False)
 
         self.last_layer = nn.Linear(self.num_prototypes, self.num_classes,
-                                    bias=False) # do not use bias
+                                    bias=False)  # do not use bias
 
         if init_weights:
             self._initialize_weights()
@@ -284,7 +284,6 @@ class PPNet(nn.Module):
         self.set_last_layer_incorrect_connection(incorrect_strength=-0.5)
 
 
-
 def construct_PPNet(base_architecture, pretrained=True, img_size=224,
                     prototype_shape=(2000, 512, 1, 1), num_classes=200,
                     prototype_activation_function='log',
@@ -304,4 +303,3 @@ def construct_PPNet(base_architecture, pretrained=True, img_size=224,
                  init_weights=True,
                  prototype_activation_function=prototype_activation_function,
                  add_on_layers_type=add_on_layers_type)
-

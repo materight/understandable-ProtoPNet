@@ -6,21 +6,23 @@ import os
 import copy
 import time
 
-from receptive_field import compute_rf_prototype
-from helpers import makedir, find_high_activation_crop
+from .receptive_field import compute_rf_prototype
+from .helpers import makedir, find_high_activation_crop
 
 # push each prototype to the nearest patch in the training set
-def push_prototypes(dataloader, # pytorch dataloader (must be unnormalized in [0,1])
-                    prototype_network_parallel, # pytorch network with prototype_vectors
+
+
+def push_prototypes(dataloader,  # pytorch dataloader (must be unnormalized in [0,1])
+                    prototype_network_parallel,  # pytorch network with prototype_vectors
                     class_specific=True,
-                    preprocess_input_function=None, # normalize if needed
+                    preprocess_input_function=None,  # normalize if needed
                     prototype_layer_stride=1,
-                    root_dir_for_saving_prototypes=None, # if not None, prototypes will be saved here
-                    epoch_number=None, # if not provided, prototypes saved previously will be overwritten
+                    root_dir_for_saving_prototypes=None,  # if not None, prototypes will be saved here
+                    epoch_number=None,  # if not provided, prototypes saved previously will be overwritten
                     prototype_img_filename_prefix=None,
                     prototype_self_act_filename_prefix=None,
                     proto_bound_boxes_filename_prefix=None,
-                    save_prototype_class_identity=True, # which class the prototype image comes from
+                    save_prototype_class_identity=True,  # which class the prototype image comes from
                     log=print,
                     prototype_activation_function_in_numpy=None):
 
@@ -50,14 +52,14 @@ def push_prototypes(dataloader, # pytorch dataloader (must be unnormalized in [0
     '''
     if save_prototype_class_identity:
         proto_rf_boxes = np.full(shape=[n_prototypes, 6],
-                                    fill_value=-1)
+                                 fill_value=-1)
         proto_bound_boxes = np.full(shape=[n_prototypes, 6],
-                                            fill_value=-1)
+                                    fill_value=-1)
     else:
         proto_rf_boxes = np.full(shape=[n_prototypes, 5],
-                                    fill_value=-1)
+                                 fill_value=-1)
         proto_bound_boxes = np.full(shape=[n_prototypes, 5],
-                                            fill_value=-1)
+                                    fill_value=-1)
 
     if root_dir_for_saving_prototypes != None:
         if epoch_number != None:
@@ -109,19 +111,21 @@ def push_prototypes(dataloader, # pytorch dataloader (must be unnormalized in [0
     prototype_network_parallel.module.prototype_vectors.data.copy_(torch.tensor(prototype_update, dtype=torch.float32).cuda())
     # prototype_network_parallel.cuda()
     end = time.time()
-    log('\tpush time: \t{0}'.format(end -  start))
+    log('\tpush time: \t{0}'.format(end - start))
 
 # update each prototype for current search batch
+
+
 def update_prototypes_on_batch(search_batch_input,
                                start_index_of_search_batch,
                                prototype_network_parallel,
-                               global_min_proto_dist, # this will be updated
-                               global_min_fmap_patches, # this will be updated
-                               proto_rf_boxes, # this will be updated
-                               proto_bound_boxes, # this will be updated
+                               global_min_proto_dist,  # this will be updated
+                               global_min_fmap_patches,  # this will be updated
+                               proto_rf_boxes,  # this will be updated
+                               proto_bound_boxes,  # this will be updated
                                class_specific=True,
-                               search_y=None, # required if class_specific == True
-                               num_classes=None, # required if class_specific == True
+                               search_y=None,  # required if class_specific == True
+                               num_classes=None,  # required if class_specific == True
                                preprocess_input_function=None,
                                prototype_layer_stride=1,
                                dir_for_saving_prototypes=None,
@@ -163,7 +167,7 @@ def update_prototypes_on_batch(search_batch_input,
     max_dist = prototype_shape[1] * prototype_shape[2] * prototype_shape[3]
 
     for j in range(n_prototypes):
-        #if n_prototypes_per_class != None:
+        # if n_prototypes_per_class != None:
         if class_specific:
             # target_class is the class of the class_specific prototype
             target_class = torch.argmax(prototype_network_parallel.module.prototype_class_identity[j]).item()
@@ -171,11 +175,11 @@ def update_prototypes_on_batch(search_batch_input,
             # we go on to the next prototype
             if len(class_to_img_index_dict[target_class]) == 0:
                 continue
-            proto_dist_j = proto_dist_[class_to_img_index_dict[target_class]][:,j,:,:]
+            proto_dist_j = proto_dist_[class_to_img_index_dict[target_class]][:, j, :, :]
         else:
             # if it is not class specific, then we will search through
             # every example
-            proto_dist_j = proto_dist_[:,j,:,:]
+            proto_dist_j = proto_dist_[:, j, :, :]
 
         batch_min_proto_dist_j = np.amin(proto_dist_j)
         if batch_min_proto_dist_j < global_min_proto_dist[j]:
@@ -204,22 +208,22 @@ def update_prototypes_on_batch(search_batch_input,
 
             global_min_proto_dist[j] = batch_min_proto_dist_j
             global_min_fmap_patches[j] = batch_min_fmap_patch_j
-            
+
             # get the receptive field boundary of the image patch
             # that generates the representation
             protoL_rf_info = prototype_network_parallel.module.proto_layer_rf_info
             rf_prototype_j = compute_rf_prototype(search_batch.size(2), batch_argmin_proto_dist_j, protoL_rf_info)
-            
+
             # get the whole image
             original_img_j = search_batch_input[rf_prototype_j[0]]
             original_img_j = original_img_j.numpy()
             original_img_j = np.transpose(original_img_j, (1, 2, 0))
             original_img_size = original_img_j.shape[0]
-            
+
             # crop out the receptive field
             rf_img_j = original_img_j[rf_prototype_j[1]:rf_prototype_j[2],
                                       rf_prototype_j[3]:rf_prototype_j[4], :]
-            
+
             # save the prototype receptive field information
             proto_rf_boxes[j, 0] = rf_prototype_j[0] + start_index_of_search_batch
             proto_rf_boxes[j, 1] = rf_prototype_j[1]
@@ -271,14 +275,14 @@ def update_prototypes_on_batch(search_batch_input,
                     rescaled_act_img_j = rescaled_act_img_j / np.amax(rescaled_act_img_j)
                     heatmap = cv2.applyColorMap(np.uint8(255*rescaled_act_img_j), cv2.COLORMAP_JET)
                     heatmap = np.float32(heatmap) / 255
-                    heatmap = heatmap[...,::-1]
+                    heatmap = heatmap[..., ::-1]
                     overlayed_original_img_j = 0.5 * original_img_j + 0.3 * heatmap
                     plt.imsave(os.path.join(dir_for_saving_prototypes,
                                             prototype_img_filename_prefix + '-original_with_self_act' + str(j) + '.png'),
                                overlayed_original_img_j,
                                vmin=0.0,
                                vmax=1.0)
-                    
+
                     # if different from the original (whole) image, save the prototype receptive field as png
                     if rf_img_j.shape[0] != original_img_size or rf_img_j.shape[1] != original_img_size:
                         plt.imsave(os.path.join(dir_for_saving_prototypes,
@@ -293,13 +297,13 @@ def update_prototypes_on_batch(search_batch_input,
                                    overlayed_rf_img_j,
                                    vmin=0.0,
                                    vmax=1.0)
-                    
+
                     # save the prototype image (highly activated region of the whole image)
                     plt.imsave(os.path.join(dir_for_saving_prototypes,
                                             prototype_img_filename_prefix + str(j) + '.png'),
                                proto_img_j,
                                vmin=0.0,
                                vmax=1.0)
-                
+
     if class_specific:
         del class_to_img_index_dict
