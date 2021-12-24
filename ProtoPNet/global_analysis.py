@@ -1,4 +1,4 @@
-from settings import train_push_dir, test_dir
+from settings import train_dir, test_dir
 import torch
 import torch.utils.data
 import torchvision.transforms as transforms
@@ -44,9 +44,6 @@ ppnet_multi = torch.nn.DataParallel(ppnet)
 img_size = ppnet_multi.module.img_size
 
 # load the data
-# must use unaugmented (original) dataset
-train_dir = train_push_dir
-
 batch_size = 100
 
 # train set: do not normalize

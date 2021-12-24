@@ -6,7 +6,7 @@ This code package implements the prototypical part network (ProtoPNet) from the 
 
 This code package was SOLELY developed by the authors at Duke University, and licensed under MIT License (see LICENSE for more information regarding the use and the distribution of this code package).
 
-**Prerequisites:** PyTorch, NumPy, cv2, Augmentor (https://github.com/mdbloice/Augmentor). \
+**Prerequisites:** PyTorch, NumPy, cv2. \
 **Recommended hardware:** 4 NVIDIA Tesla P-100 GPUs or 8 NVIDIA Tesla K-80 GPUs.
 
 ## Dataset preparation
@@ -19,11 +19,10 @@ This code package was SOLELY developed by the authors at Duke University, and li
 7. Augment the training set using `img_aug.py` (included in this code package). This will create an augmented training set in the following directory: `./datasets/cub200_cropped/train_cropped_augmented/`.
 
 ## Training the model
-1. In `settings.py`, provide the appropriate strings for `data_path`, `train_dir`, `test_dir`, `train_push_dir`:
+1. In `settings.py`, provide the appropriate strings for `data_path`, `train_dir`, `test_dir`:
     - `data_path` is where the dataset resides. If you followed the instructions for preparing the data, it should be `./datasets/cub200_cropped/`.
     - `train_dir` is the directory containing the augmented training set. If you followed the instructions for preparing the data, it should be `data_path` + `train_cropped_augmented/`.
     - `test_dir` is the directory containing the test set. If you followed the instructions for preparing the data, it should be `data_path` + `test_cropped/`.
-    - `train_push_dir` is the directory containing the original (unaugmented) training set. If you followed the instructions for preparing the data, it should be `data_path` + `train_cropped/`.
 2. Run `main.py`.
 
 ## Find nearest prototypes to a test image

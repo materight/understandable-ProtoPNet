@@ -5,8 +5,6 @@ import tarfile
 from tqdm import tqdm
 from PIL import Image
 
-from model.img_aug import augment_data
-
 # Data taken from http://www.vision.caltech.edu/visipedia/CUB-200-2011.html
 CUB200_URL = 'https://drive.google.com/uc?id=1hbzc_P1FuxMkcabkgn9ZKinBwW683j45'
 
@@ -48,10 +46,6 @@ with open(f'{DATASETS_FOLDER}/tmp/CUB_200_2011/images.txt') as images_file, \
         out_path = f'{OUTPUT_FOLDER}/{"train_cropped" if bool(int(is_training)) else "test_cropped"}/{parent_folder}'
         os.makedirs(f'{out_path}', exist_ok=True)
         cropped.save(f'{out_path}/{id1}.jpg')
-
-# Augment data
-print('Augmenting data...')
-augment_data(OUTPUT_FOLDER, 'train_cropped', 'train_cropped_augmented')
 
 # Clean up
 shutil.rmtree(TMP_FOLDER)

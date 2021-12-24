@@ -8,12 +8,8 @@ add_on_layers_type = 'regular'
 experiment_run = '003'
 
 data_path = './datasets/cub200_cropped/'
-train_dir = data_path + 'train_cropped_augmented/'
+train_dir = data_path + 'train_cropped/'
 test_dir = data_path + 'test_cropped/'
-train_push_dir = data_path + 'train_cropped/'
-train_batch_size = 80
-test_batch_size = 100
-train_push_batch_size = 75
 
 joint_optimizer_lrs = {'features': 1e-4,
                        'add_on_layers': 3e-3,

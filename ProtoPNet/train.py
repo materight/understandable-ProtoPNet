@@ -3,26 +3,27 @@ import shutil
 
 import torch
 import torch.utils.data
+from torch.utils.data import dataloader
 # import torch.utils.data.distributed
-import torchvision.transforms as transforms
+import torchvision.transforms as T
 import torchvision.datasets as datasets
 
 import argparse
 import re
 
-from .helpers import makedir
+from .helpers import makedir, set_seed
 from . import model, push, prune, train_and_test as tnt, save
 from .log import create_logger
 from .preprocess import mean, std, preprocess_input_function
 
 
-def run(gpu_ids):
-    os.environ['CUDA_VISIBLE_DEVICES'] = gpu_ids[0]
+def run(gpu_ids, num_workers, batch_size, seed):
+    set_seed(seed)
+    os.environ['CUDA_VISIBLE_DEVICES'] = gpu_ids
     print('GPUs:', os.environ['CUDA_VISIBLE_DEVICES'])
 
     # book keeping namings and code
-    from .settings import base_architecture, img_size, prototype_shape, num_classes, \
-        prototype_activation_function, add_on_layers_type, experiment_run
+    from .settings import base_architecture, img_size, prototype_shape, num_classes, prototype_activation_function, add_on_layers_type, experiment_run
 
     base_architecture_type = re.match('^[a-z]*', base_architecture).group(0)
 
@@ -43,51 +44,51 @@ def run(gpu_ids):
     proto_bound_boxes_filename_prefix = 'bb'
 
     # load the data
-    from .settings import train_dir, test_dir, train_push_dir, \
-        train_batch_size, test_batch_size, train_push_batch_size
+    from .settings import train_dir, test_dir
 
-    normalize = transforms.Normalize(mean=mean,
-                                     std=std)
+    normalize = T.Normalize(mean=mean, std=std)
 
     # all datasets
     # train set
     train_dataset = datasets.ImageFolder(
         train_dir,
-        transforms.Compose([
-            transforms.Resize(size=(img_size, img_size)),
-            transforms.ToTensor(),
+        T.Compose([
+            T.RandomAffine(degrees=15, shear=10),
+            T.RandomHorizontalFlip(p=0.5),
+            T.Resize(size=(img_size, img_size)),
+            T.ToTensor(),
             normalize,
         ]))
     train_loader = torch.utils.data.DataLoader(
-        train_dataset, batch_size=train_batch_size, shuffle=True,
-        num_workers=4, pin_memory=False)
+        train_dataset, batch_size=batch_size, shuffle=True,
+        num_workers=num_workers, pin_memory=False)
     # push set
     train_push_dataset = datasets.ImageFolder(
-        train_push_dir,
-        transforms.Compose([
-            transforms.Resize(size=(img_size, img_size)),
-            transforms.ToTensor(),
+        train_dir,
+        T.Compose([
+            T.Resize(size=(img_size, img_size)),
+            T.ToTensor(),
         ]))
     train_push_loader = torch.utils.data.DataLoader(
-        train_push_dataset, batch_size=train_push_batch_size, shuffle=False,
-        num_workers=4, pin_memory=False)
+        train_push_dataset, batch_size=batch_size, shuffle=False,
+        num_workers=num_workers, pin_memory=False)
     # test set
     test_dataset = datasets.ImageFolder(
         test_dir,
-        transforms.Compose([
-            transforms.Resize(size=(img_size, img_size)),
-            transforms.ToTensor(),
+        T.Compose([
+            T.Resize(size=(img_size, img_size)),
+            T.ToTensor(),
             normalize,
         ]))
     test_loader = torch.utils.data.DataLoader(
-        test_dataset, batch_size=test_batch_size, shuffle=False,
-        num_workers=4, pin_memory=False)
+        test_dataset, batch_size=batch_size, shuffle=False,
+        num_workers=num_workers, pin_memory=False)
 
     # we should look into distributed sampler more carefully at torch.utils.data.distributed.DistributedSampler(train_dataset)
     log('training set size: {0}'.format(len(train_loader.dataset)))
     log('push set size: {0}'.format(len(train_push_loader.dataset)))
     log('test set size: {0}'.format(len(test_loader.dataset)))
-    log('batch size: {0}'.format(train_batch_size))
+    log('batch size: {0}'.format(batch_size))
 
     # construct the model
     ppnet = model.construct_PPNet(base_architecture=base_architecture,

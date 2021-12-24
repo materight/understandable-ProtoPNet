@@ -1,5 +1,6 @@
 import time
 import torch
+from tqdm import tqdm
 
 from .helpers import list_of_distances, make_one_hot
 
@@ -22,7 +23,7 @@ def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l
     total_separation_cost = 0
     total_avg_separation_cost = 0
 
-    for i, (image, label) in enumerate(dataloader):
+    for i, (image, label) in enumerate(tqdm(dataloader)):
         input = image.cuda()
         target = label.cuda()
 

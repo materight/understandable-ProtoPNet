@@ -1,4 +1,4 @@
-from settings import train_dir, test_dir, train_push_dir
+from settings import train_dir, test_dir
 import os
 import shutil
 
@@ -95,7 +95,7 @@ log('batch size: {0}'.format(train_batch_size))
 
 # push set: needed for pruning because it is unnormalized
 train_push_dataset = datasets.ImageFolder(
-    train_push_dir,
+    train_dir,
     transforms.Compose([
         transforms.Resize(size=(img_size, img_size)),
         transforms.ToTensor(),
