@@ -110,18 +110,18 @@ def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l
 
     end = time.time()
 
-    log('\ttime: \t{0}'.format(end - start))
-    log('\tcross ent: \t{0}'.format(total_cross_entropy / n_batches))
-    log('\tcluster: \t{0}'.format(total_cluster_cost / n_batches))
+    log('\ttime: \t{0:.2f}'.format(end - start))
+    log('\tcross ent: \t{0:.5f}'.format(total_cross_entropy / n_batches))
+    log('\tcluster: \t{0:.5f}'.format(total_cluster_cost / n_batches))
     if class_specific:
-        log('\tseparation:\t{0}'.format(total_separation_cost / n_batches))
-        log('\tavg separation:\t{0}'.format(total_avg_separation_cost / n_batches))
-    log('\taccu: \t\t{0}%'.format(n_correct / n_examples * 100))
-    log('\tl1: \t\t{0}'.format(model.module.last_layer.weight.norm(p=1).item()))
+        log('\tseparation:\t{0:.5f}'.format(total_separation_cost / n_batches))
+        log('\tavg separation:\t{0:.5f}'.format(total_avg_separation_cost / n_batches))
+    log('\taccu: \t\t{0:.5f}%'.format(n_correct / n_examples * 100))
+    log('\tl1: \t\t{0:.2f}'.format(model.module.last_layer.weight.norm(p=1).item()))
     p = model.module.prototype_vectors.view(model.module.num_prototypes, -1).cpu()
     with torch.no_grad():
         p_avg_pair_dist = torch.mean(list_of_distances(p, p))
-    log('\tp dist pair: \t{0}'.format(p_avg_pair_dist.item()))
+    log('\tp dist pair: \t{0:.5f}'.format(p_avg_pair_dist.item()))
 
     return n_correct / n_examples
 
@@ -129,14 +129,14 @@ def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l
 def train(model, dataloader, optimizer, class_specific=False, coefs=None, log=print):
     assert(optimizer is not None)
 
-    log('\ttrain')
+    log('train')
     model.train()
     return _train_or_test(model=model, dataloader=dataloader, optimizer=optimizer,
                           class_specific=class_specific, coefs=coefs, log=log)
 
 
 def test(model, dataloader, class_specific=False, log=print):
-    log('\ttest')
+    log('test')
     model.eval()
     return _train_or_test(model=model, dataloader=dataloader, optimizer=None,
                           class_specific=class_specific, log=log)
