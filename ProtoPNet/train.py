@@ -180,5 +180,5 @@ def run(gpu_ids, num_workers, batch_size, seed):
                                     class_specific=class_specific, log=log)
                     save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + '_' + str(i) + 'push', accu=accu,
                                                 target_accu=0.70, log=log)
-        log('---------------------')
+        log('------------------------------------------\n')
     logclose()
