@@ -16,7 +16,6 @@ This code package was SOLELY developed by the authors at Duke University, and li
 4. Split the cropped images into training and test sets, using `train_test_split.txt` (included in the dataset).
 5. Put the cropped training images in the directory `./datasets/cub200_cropped/train_cropped/`.
 6. Put the cropped test images in the directory `./datasets/cub200_cropped/test_cropped/`.
-7. Augment the training set using `img_aug.py` (included in this code package). This will create an augmented training set in the following directory: `./datasets/cub200_cropped/train_cropped_augmented/`.
 
 ## Training the model
 1. In `settings.py`, provide the appropriate strings for `data_path`, `train_dir`, `test_dir`:

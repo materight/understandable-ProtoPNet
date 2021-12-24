@@ -131,7 +131,7 @@ def run(gpu_ids, num_workers, batch_size, seed):
     from .settings import num_train_epochs, num_warm_epochs, push_start, push_epochs
 
     # train the model
-    log('start training')
+    log('\nStart training')
     import copy
     for epoch in range(num_train_epochs):
         log('epoch: \t{0}'.format(epoch))
@@ -180,5 +180,5 @@ def run(gpu_ids, num_workers, batch_size, seed):
                                     class_specific=class_specific, log=log)
                     save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + '_' + str(i) + 'push', accu=accu,
                                                 target_accu=0.70, log=log)
-
+        log('---------------------')
     logclose()
