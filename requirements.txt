@@ -1,3 +1,4 @@
+-f https://download.pytorch.org/whl/cu113/torch_stable.html
 gdown==4.2.0
 matplotlib==3.3.4
 numpy==1.21.1
