@@ -14,7 +14,7 @@ test_dir = data_path + 'test_cropped/'
 joint_optimizer_lrs = {'features': 1e-4,
                        'add_on_layers': 3e-3,
                        'prototype_vectors': 3e-3}
-joint_lr_step_size = 5
+joint_lr_step_size = 200
 
 warm_optimizer_lrs = {'add_on_layers': 3e-3,
                       'prototype_vectors': 3e-3}
