@@ -2,9 +2,9 @@
 
 Original repository: https://github.com/cfchen-duke/ProtoPNet
 
-This code package implements the prototypical part network (ProtoPNet) from the paper *This Looks Like That: Deep Learning for Interpretable Image Recognition*, by C. Chen, O. Li, C. Tao, A. J. Barnett, J. Su and C. Rudin.
+This code package implements the **Prototypical Part Network** (ProtoPNet) from the paper "*This Looks Like That: Deep Learning for Interpretable Image Recognition*" by C. Chen, O. Li, C. Tao, A. J. Barnett, J. Su and C. Rudin.
 
-This code package was SOLELY developed by the authors at Duke University, and licensed under MIT License (see LICENSE for more information regarding the use and the distribution of this code package).
+This code package was solely developed by the authors at Duke University, and licensed under MIT License (see LICENSE for more information regarding the use and the distribution of this code package).
 
 **Prerequisites:** PyTorch, NumPy, cv2. \
 **Recommended hardware:** 4 NVIDIA Tesla P-100 GPUs or 8 NVIDIA Tesla K-80 GPUs.
