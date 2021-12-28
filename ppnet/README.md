@@ -2,7 +2,7 @@
 
 Original repository: https://github.com/cfchen-duke/ProtoPNet
 
-This code package implements the prototypical part network (ProtoPNet) from the paper "This Looks Like That: Deep Learning for Interpretable Image Recognition" (to appear at NeurIPS 2019), by Chaofan Chen* (Duke University), Oscar Li* (Duke University), Chaofan Tao (Duke University), Alina Jade Barnett (Duke University), Jonathan Su (MIT Lincoln Laboratory), and Cynthia Rudin (Duke University) (* denotes equal contribution).
+This code package implements the prototypical part network (ProtoPNet) from the paper *This Looks Like That: Deep Learning for Interpretable Image Recognition*, by C. Chen, O. Li, C. Tao, A. J. Barnett, J. Su and C. Rudin.
 
 This code package was SOLELY developed by the authors at Duke University, and licensed under MIT License (see LICENSE for more information regarding the use and the distribution of this code package).
 
