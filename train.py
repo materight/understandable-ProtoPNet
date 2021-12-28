@@ -1,6 +1,6 @@
 import argparse
 
-from ProtoPNet import train
+from ppnet import train
 
 # Script options
 parser = argparse.ArgumentParser(description='Train a new ProtoPNet model', formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=42))
