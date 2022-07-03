@@ -142,7 +142,6 @@ def train(args: Namespace):
 
     # train the model
     log('\nStart training')
-    import copy
     for epoch in range(args.epochs):
         log('epoch: \t{0}'.format(epoch))
 
@@ -156,12 +155,13 @@ def train(args: Namespace):
             _ = tnt.train(model=ppnet_multi, dataloader=train_loader, optimizer=joint_optimizer,
                           class_specific=class_specific, coefs=coefs, log=log)
 
-        accu = tnt.test(model=ppnet_multi, dataloader=test_loader,
-                        class_specific=class_specific, log=log)
-        save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + 'nopush', accu=accu,
-                                    target_accu=0.70, log=log, epoch=epoch)
+        if epoch % args.test_interval == 0:
+            accu = tnt.test(model=ppnet_multi, dataloader=test_loader,
+                            class_specific=class_specific, log=log)
+            save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + 'nopush', accu=accu,
+                                        target_accu=0.70, log=log, epoch=epoch)
 
-        if epoch >= args.push_start and epoch in push_epochs:
+        if epoch % args.push_interval == 0:
             push.push_prototypes(
                 train_push_loader,  # pytorch dataloader (must be unnormalized in [0,1])
                 prototype_network_parallel=ppnet_multi,  # pytorch network with prototype_vectors

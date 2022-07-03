@@ -10,8 +10,8 @@ parser.add_argument('--exp', type=str, default=datetime.now().strftime('%Y%m%dT%
 parser.add_argument('--data_path', type=str, default= './datasets/cub200/', help='path of the dataset to use for training and evaluation (default: %(default)s)')
 parser.add_argument('--epochs', type=int, default=500, help='number of training epochs (default: %(default)s)')
 parser.add_argument('--warm_epochs', type=int, default=5, help='number of warming epochs (default: %(default)s)')
-parser.add_argument('--push_start', type=int, default=10, help='epoch in which to start pushing prototypes  (default: %(default)s)')
-parser.add_argument('--push_interval', type=int, default=20, help='epoch interval in which push prototypes  (default: %(default)s)')
+parser.add_argument('--test_interval', type=int, default=5, help='interval of epochs in which to run the model on the test set (default: %(default)s)')
+parser.add_argument('--push_interval', type=int, default=10, help='epoch interval in which to push prototypes (default: %(default)s)')
 
 parser.add_argument('--num_classes', type=int, default=200, help='number of classes (default: %(default)s)')
 parser.add_argument('--img_size', type=int, default=224, help='resize dimension for training images (default: %(default)s)')
