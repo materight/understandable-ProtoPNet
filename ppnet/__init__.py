@@ -161,7 +161,7 @@ def train(args: Namespace):
             save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + 'nopush', accu=accu,
                                         target_accu=0.70, log=log, epoch=epoch)
 
-        if epoch % args.push_interval == 0:
+        if epoch > 0 and epoch % args.push_interval == 0:
             push.push_prototypes(
                 train_push_loader,  # pytorch dataloader (must be unnormalized in [0,1])
                 prototype_network_parallel=ppnet_multi,  # pytorch network with prototype_vectors
