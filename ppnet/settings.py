@@ -7,9 +7,9 @@ add_on_layers_type = 'regular'
 
 experiment_run = '003'
 
-data_path = './datasets/cub200_cropped/'
-train_dir = data_path + 'train_cropped/'
-test_dir = data_path + 'test_cropped/'
+data_path = './datasets/cub200/'
+train_dir = data_path + 'train/'
+test_dir = data_path + 'test/'
 
 joint_optimizer_lrs = {'features': 1e-4,
                        'add_on_layers': 3e-3,
