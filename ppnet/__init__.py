@@ -7,7 +7,7 @@ import torch.utils.data
 import torchvision.transforms as T
 import torchvision.datasets as datasets
 
-from .helpers import makedir, set_seed
+from .helpers import set_seed
 from . import model, push, prune, train_and_test as tnt, save
 from .log import create_logger
 from .preprocess import mean, std, preprocess_input_function
@@ -40,11 +40,11 @@ def train(args: Namespace):
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpus
     print('GPUs:', os.environ['CUDA_VISIBLE_DEVICES'])
 
-    push_epochs = [i for i in range(args.epochs) if i % args.push_interval == 0]
     base_architecture_type = re.match('^[a-z]*', base_architecture).group(0)
-
-    model_dir = './saved_models/' + base_architecture + '/' + args.exp + '/'
-    makedir(model_dir)
+    model_dir = os.path.join('./saved_models', base_architecture, args.exp_name)
+    if os.path.exists(model_dir):
+        raise RuntimeError(f'Model directory {model_dir} already exists')
+    os.makedirs(model_dir)
     shutil.copy(src=os.path.join(os.getcwd(), __file__), dst=model_dir)
     shutil.copy(src=os.path.join(os.getcwd(), 'ppnet', 'settings.py'), dst=model_dir)
     shutil.copy(src=os.path.join(os.getcwd(), 'ppnet', base_architecture_type + '_features.py'), dst=model_dir)
@@ -53,7 +53,7 @@ def train(args: Namespace):
 
     log, logclose = create_logger(log_filename=os.path.join(model_dir, 'train.log'))
     img_dir = os.path.join(model_dir, 'img')
-    makedir(img_dir)
+    os.makedirs(img_dir)
     weight_matrix_filename = 'outputL_weights'
     prototype_img_filename_prefix = 'prototype-img'
     prototype_self_act_filename_prefix = 'prototype-self-act'

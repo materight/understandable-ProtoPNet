@@ -6,7 +6,7 @@ from ppnet import train
 # Script options
 parser = argparse.ArgumentParser(description='Train a new ProtoPNet model', formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=42))
 
-parser.add_argument('--exp', type=str, default=datetime.now().strftime('%Y%m%dT%H%M%S'), help='id of the current experiment (default: %(default)s)')
+parser.add_argument('--exp_name', type=str, default=datetime.now().strftime('%Y%m%dT%H%M%S'), help='id of the current experiment (default: %(default)s)')
 parser.add_argument('--data_path', type=str, default= './datasets/cub200/', help='path of the dataset to use for training and evaluation (default: %(default)s)')
 parser.add_argument('--epochs', type=int, default=500, help='number of training epochs (default: %(default)s)')
 parser.add_argument('--warm_epochs', type=int, default=5, help='number of warming epochs (default: %(default)s)')
