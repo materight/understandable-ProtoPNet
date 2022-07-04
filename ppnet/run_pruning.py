@@ -1,4 +1,3 @@
-from settings import train_dir, test_dir
 import os
 import shutil
 

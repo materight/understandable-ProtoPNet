@@ -43,17 +43,20 @@ def train(args: Namespace):
     base_architecture_type = re.match('^[a-z]*', base_architecture).group(0)
     model_dir = os.path.join('./saved_models', base_architecture, args.exp_name)
     if os.path.exists(model_dir):
-        raise RuntimeError(f'Model directory {model_dir} already exists')
-    os.makedirs(model_dir)
+        print(f'Model directory "{args.exp_name}" already exists, overwriting...')
+    else:    
+        os.makedirs(model_dir)
+    log, logclose = create_logger(log_filename=os.path.join(model_dir, 'train.log'))
     shutil.copy(src=os.path.join(os.getcwd(), __file__), dst=model_dir)
-    shutil.copy(src=os.path.join(os.getcwd(), 'ppnet', 'settings.py'), dst=model_dir)
     shutil.copy(src=os.path.join(os.getcwd(), 'ppnet', base_architecture_type + '_features.py'), dst=model_dir)
     shutil.copy(src=os.path.join(os.getcwd(), 'ppnet', 'model.py'), dst=model_dir)
     shutil.copy(src=os.path.join(os.getcwd(), 'ppnet', 'train_and_test.py'), dst=model_dir)
+    with open(os.path.join(model_dir, 'args.yaml'), 'w') as f:
+        for k, v in vars(args).items():
+            f.write(f'{k}: {v}\n')
 
-    log, logclose = create_logger(log_filename=os.path.join(model_dir, 'train.log'))
     img_dir = os.path.join(model_dir, 'img')
-    os.makedirs(img_dir)
+    os.makedirs(img_dir, exist_ok=True)
     weight_matrix_filename = 'outputL_weights'
     prototype_img_filename_prefix = 'prototype-img'
     prototype_self_act_filename_prefix = 'prototype-self-act'
@@ -138,8 +141,6 @@ def train(args: Namespace):
     last_layer_optimizer_specs = [{'params': ppnet.last_layer.parameters(), 'lr': last_layer_optimizer_lr}]
     last_layer_optimizer = torch.optim.Adam(last_layer_optimizer_specs)
 
-
-
     # train the model
     log('\nStart training')
     for epoch in range(args.epochs):
@@ -155,7 +156,7 @@ def train(args: Namespace):
             _ = tnt.train(model=ppnet_multi, dataloader=train_loader, optimizer=joint_optimizer,
                           class_specific=class_specific, coefs=coefs, log=log)
 
-        if epoch % args.test_interval == 0:
+        if epoch % args.push_interval == 0:
             accu = tnt.test(model=ppnet_multi, dataloader=test_loader,
                             class_specific=class_specific, log=log)
             save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + 'nopush', accu=accu,

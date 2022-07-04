@@ -1,5 +1,4 @@
 # MODEL AND DATA LOADING
-from settings import test_dir
 import torch
 import torch.utils.data
 import torchvision.transforms as transforms
