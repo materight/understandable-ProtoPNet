@@ -155,7 +155,7 @@ def train(args: Namespace):
                           class_specific=class_specific, coefs=coefs, log=log)
             joint_lr_scheduler.step()
 
-        if epoch % args.push_interval == 0:
+        if epoch % args.test_interval == 0:
             accu = tnt.test(model=ppnet_multi, dataloader=test_loader,
                             class_specific=class_specific, log=log)
             save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=str(epoch) + 'nopush', accu=accu,
