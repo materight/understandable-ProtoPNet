@@ -21,7 +21,6 @@ def train(args: Namespace):
         add_on_layers=3e-3,
         prototype_vectors=3e-3
     )
-    joint_lr_step_size = 200
     warm_optimizer_lrs = dict(
         add_on_layers=3e-3,
         prototype_vectors=3e-3
@@ -129,7 +128,7 @@ def train(args: Namespace):
             {'params': ppnet.prototype_vectors, 'lr': joint_optimizer_lrs['prototype_vectors']},
          ]
     joint_optimizer = torch.optim.Adam(joint_optimizer_specs)
-    joint_lr_scheduler = torch.optim.lr_scheduler.StepLR(joint_optimizer, step_size=joint_lr_step_size, gamma=0.1)
+    joint_lr_scheduler = torch.optim.lr_scheduler.StepLR(joint_optimizer, step_size=args.step_size, gamma=0.1)
 
     warm_optimizer_specs = \
         [{'params': ppnet.add_on_layers.parameters(), 'lr': warm_optimizer_lrs['add_on_layers'], 'weight_decay': 1e-3},
