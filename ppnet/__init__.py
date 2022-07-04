@@ -8,7 +8,7 @@ import torchvision.transforms as T
 import torchvision.datasets as datasets
 
 from .helpers import set_seed
-from . import model, push, prune, train_and_test as tnt, save
+from . import model, push, train_and_test as tnt, save
 from .log import create_logger
 from .preprocess import mean, std, preprocess_input_function
 
@@ -71,7 +71,8 @@ def train(args: Namespace):
     train_dataset = datasets.ImageFolder(
         train_dir,
         T.Compose([
-            T.RandomAffine(degrees=15, shear=10),
+            T.RandomAffine(degrees=20, shear=15),
+            T.RandomPerspective(distortion_scale=0.25, p=0.25),
             T.RandomHorizontalFlip(p=0.5),
             T.Resize(size=(args.img_size, args.img_size)),
             T.ToTensor(),
