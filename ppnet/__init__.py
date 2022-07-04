@@ -15,7 +15,6 @@ from .preprocess import mean, std, preprocess_input_function
 
 def train(args: Namespace):
     # Set default values
-    base_architecture = 'vgg19'
     prototype_shape = (2000, 128, 1, 1)
     joint_optimizer_lrs = dict(
         features=1e-4,
@@ -40,8 +39,8 @@ def train(args: Namespace):
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpus
     print('GPUs:', os.environ['CUDA_VISIBLE_DEVICES'])
 
-    base_architecture_type = re.match('^[a-z]*', base_architecture).group(0)
-    model_dir = os.path.join('./saved_models', base_architecture, args.exp_name)
+    base_architecture_type = re.match('^[a-z]*', args.architecture).group(0)
+    model_dir = os.path.join('./saved_models', args.architecture, args.exp_name)
     if os.path.exists(model_dir):
         print(f'Model directory "{args.exp_name}" already exists, overwriting...')
     else:    
@@ -111,7 +110,7 @@ def train(args: Namespace):
     log('batch size: {0}'.format(args.batch_size))
 
     # construct the model
-    ppnet = model.construct_PPNet(base_architecture=base_architecture,
+    ppnet = model.construct_PPNet(base_architecture=args.architecture,
                                   pretrained=True, img_size=args.img_size,
                                   prototype_shape=prototype_shape,
                                   num_classes=args.num_classes,
@@ -143,7 +142,7 @@ def train(args: Namespace):
 
     # train the model
     log('\nStart training')
-    for epoch in range(args.epochs):
+    for epoch in range(args.epochs + 1):
         log('epoch: \t{0}'.format(epoch))
 
         if epoch < args.warm_epochs:
