@@ -12,7 +12,7 @@ parser.add_argument('--architecture', type=str, default= 'resnet34', help='model
 parser.add_argument('--epochs', type=int, default=10000, help='number of training epochs (default: %(default)s)')
 parser.add_argument('--warm_epochs', type=int, default=150, help='number of warming epochs (default: %(default)s)')
 parser.add_argument('--step_size', type=int, default=150, help='number of warming epochs (default: %(default)s)')
-parser.add_argument('--test_interval', type=int, default=10, help='epoch interval in which to run the model on the test split (default: %(default)s)')
+parser.add_argument('--test_interval', type=int, default=30, help='epoch interval in which to run the model on the test split (default: %(default)s)')
 parser.add_argument('--push_interval', type=int, default=300, help='epoch interval in which to push prototypes (default: %(default)s)')
 
 parser.add_argument('--num_classes', type=int, default=200, help='number of classes (default: %(default)s)')
