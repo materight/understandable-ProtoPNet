@@ -239,8 +239,8 @@ def run_training(args: Namespace):
     proto_bound_boxes_filename_prefix = 'bb'
 
     # load the data
-    train_dir = os.path.join(args.data_path, 'train')
-    test_dir = os.path.join(args.data_path, 'test')
+    train_dir = os.path.join(args.dataset, 'train')
+    test_dir = os.path.join(args.dataset, 'test')
 
     normalize = T.Normalize(mean=mean, std=std)
 

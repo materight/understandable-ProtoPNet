@@ -15,7 +15,6 @@ def prune_prototypes(dataloader,
                      preprocess_input_function,
                      original_model_dir,
                      epoch_number,
-                     # model_name=None,
                      log=print,
                      copy_prototype_imgs=True):
     # run global analysis
@@ -58,11 +57,6 @@ def prune_prototypes(dataloader,
 
     # prune prototypes
     prototype_network_parallel.module.prune_prototypes(prototypes_to_prune)
-    # torch.save(obj=prototype_network_parallel.module,
-    #           f=os.path.join(original_model_dir, 'pruned_prototypes_epoch{}_k{}_pt{}'.format(epoch_number,
-    #                                              k,
-    #                                              prune_threshold),
-    #                          model_name + '-pruned.pth'))
     if copy_prototype_imgs:
         original_img_dir = os.path.join(original_model_dir, 'img', 'epoch-%d' % epoch_number)
         dst_img_dir = os.path.join(original_model_dir,

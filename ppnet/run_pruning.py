@@ -117,7 +117,6 @@ prune.prune_prototypes(dataloader=train_push_loader,
                        preprocess_input_function=preprocess_input_function,  # normalize
                        original_model_dir=original_model_dir,
                        epoch_number=epoch,
-                       # model_name=None,
                        log=log,
                        copy_prototype_imgs=True)
 accu = tnt.test(model=ppnet_multi, dataloader=test_loader,
