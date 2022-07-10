@@ -21,8 +21,8 @@ global_parser.set_defaults(func=global_analysis.run_analysis)
 # Local analysis arguments
 local_parser = subparsers.add_parser('local', help='run local protypes analysis')
 local_parser.add_argument('--img', type=str, required=True, help='path of an image in the dataset to use for evaluation')
-local_parser.add_argument('--top_prototypes', type=int, default=10, help='number of most activated prototypes to be displayed (default: %(default)s)')
-local_parser.add_argument('--top_classes', type=int, default=50, help='number of most activated classes for which display the to prototypes (default: %(default)s)')
+local_parser.add_argument('--top_prototypes', type=int, default=5, help='number of most activated prototypes to be displayed (default: %(default)s)')
+local_parser.add_argument('--top_classes', type=int, default=10, help='number of most activated classes for which display the to prototypes (default: %(default)s)')
 local_parser.set_defaults(func=local_analysis.run_analysis)
 
 
