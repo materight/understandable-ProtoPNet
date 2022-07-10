@@ -21,11 +21,9 @@ from .preprocess import mean, std, undo_preprocess_input_function
 def save_preprocessed_img(fname, preprocessed_imgs, index=0):
     img_copy = copy.deepcopy(preprocessed_imgs[index:index+1])
     undo_preprocessed_img = undo_preprocess_input_function(img_copy)
-    print('image index {0} in batch'.format(index))
     undo_preprocessed_img = undo_preprocessed_img[0]
     undo_preprocessed_img = undo_preprocessed_img.detach().cpu().numpy()
     undo_preprocessed_img = np.transpose(undo_preprocessed_img, [1, 2, 0])
-
     plt.imsave(fname, undo_preprocessed_img)
     return undo_preprocessed_img
 
@@ -46,8 +44,7 @@ def save_prototype_original_img_with_bbox(load_img_dir, fname, epoch, index,
                                           bbox_height_start, bbox_height_end,
                                           bbox_width_start, bbox_width_end, color=(0, 255, 255)):
     p_img_bgr = cv2.imread(os.path.join(load_img_dir, 'epoch-'+str(epoch), str(index), 'prototype-img-original.png'))
-    cv2.rectangle(p_img_bgr, (bbox_width_start, bbox_height_start), (bbox_width_end-1, bbox_height_end-1),
-                  color, thickness=2)
+    cv2.rectangle(p_img_bgr, (bbox_width_start, bbox_height_start), (bbox_width_end-1, bbox_height_end-1), color, thickness=2)
     p_img_rgb = p_img_bgr[..., ::-1]
     p_img_rgb = np.float32(p_img_rgb) / 255
     # plt.imshow(p_img_rgb)
@@ -57,8 +54,7 @@ def save_prototype_original_img_with_bbox(load_img_dir, fname, epoch, index,
 def imsave_with_bbox(fname, img_rgb, bbox_height_start, bbox_height_end,
                      bbox_width_start, bbox_width_end, color=(0, 255, 255)):
     img_bgr_uint8 = cv2.cvtColor(np.uint8(255*img_rgb), cv2.COLOR_RGB2BGR)
-    cv2.rectangle(img_bgr_uint8, (bbox_width_start, bbox_height_start), (bbox_width_end-1, bbox_height_end-1),
-                  color, thickness=2)
+    cv2.rectangle(img_bgr_uint8, (bbox_width_start, bbox_height_start), (bbox_width_end-1, bbox_height_end-1), color, thickness=2)
     img_rgb_uint8 = img_bgr_uint8[..., ::-1]
     img_rgb_float = np.float32(img_rgb_uint8) / 255
     plt.axis('off')
@@ -68,24 +64,23 @@ def imsave_with_bbox(fname, img_rgb, bbox_height_start, bbox_height_end,
 
 def run_analysis(args: Namespace):
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpus
-    print('GPUs:', os.environ['CUDA_VISIBLE_DEVICES'])
 
     # Compute params
     img_path = os.path.abspath(args.img)  # ./datasets/celeb_a/gender/test/Male/1.jpg
-    img_dataset, _, img_class, img_name = re.split(r'\\|/', img_path)[-4:]
+    img_class, img_name = re.split(r'\\|/', img_path)[-2:]
 
     model_path = os.path.abspath(args.model)  # ./saved_models/vgg19/003/checkpoints/10_18push0.7822.pth
     model_base_architecture, experiment_run, _, model_name = re.split(r'\\|/', model_path)[-4:]
     start_epoch_number = int(re.search(r'\d+', model_name).group(0))
 
-    save_analysis_path = os.path.join(args.out, 'local', model_base_architecture, experiment_run, model_name, img_class, img_name)
+    save_analysis_path = os.path.join(args.out, model_base_architecture, experiment_run, model_name, 'local', img_class, img_name)
     makedir(save_analysis_path)
     log, logclose = create_logger(log_filename=os.path.join(save_analysis_path, 'local_analysis.log'))
 
-    log(f'load model from: {args.model}')
-    log(f'model epoch: {start_epoch_number}')
-    log(f'model base architecture: {model_base_architecture}')
-    log(f'experiment run: {experiment_run}')
+    log(f'\nLoad model from: {args.model}')
+    log(f'Model epoch: {start_epoch_number}')
+    log(f'Model base architecture: {model_base_architecture}')
+    log(f'Experiment run: {experiment_run}\n')
 
     ppnet = torch.load(args.model)
     ppnet = ppnet.cuda()
@@ -103,17 +98,15 @@ def run_analysis(args: Namespace):
     assert os.path.exists(load_img_dir), f'Folder "{load_img_dir}" does not exist'
     prototype_info = np.load(os.path.join(load_img_dir, f'epoch-{start_epoch_number}', 'bb.npy'))
     prototype_img_identity = prototype_info[:, -1]
-
-    log('Prototypes are chosen from ' + str(len(set(prototype_img_identity))) + ' number of classes.')
-    log('Their class identities are: ' + str(prototype_img_identity))
+    log('Prototypes are chosen from ' + str(len(set(prototype_img_identity))) + ' classes')
 
     # confirm prototype connects most strongly to its own class
     prototype_max_connection = torch.argmax(ppnet.last_layer.weight, dim=0)
     prototype_max_connection = prototype_max_connection.cpu().numpy()
     if np.sum(prototype_max_connection == prototype_img_identity) == ppnet.num_prototypes:
-        log('All prototypes connect most strongly to their respective classes.')
+        log('All prototypes connect strongly to their respective classes\n')
     else:
-        log('WARNING: Not all prototypes connect most strongly to their respective classes.')
+        log('WARNING: Not all prototypes connect most strongly to their respective classes\n')
 
     # load the test image and forward it through the network
     preprocess = transforms.Compose([
@@ -140,17 +133,15 @@ def run_analysis(args: Namespace):
     tables = []
     for i in range(logits.size(0)):
         tables.append((torch.argmax(logits, dim=1)[i].item(), labels_test[i].item()))
-        log(str(i) + ' ' + str(tables[-1]))
 
     idx = 0
     predicted_cls = tables[idx][0]
     correct_cls = tables[idx][1]
-    log('Predicted: ' + str(predicted_cls))
-    log('Actual: ' + str(correct_cls))
+    log('Predicted class: ' + str(predicted_cls))
+    log('Correct class: ' + str(correct_cls) + '\n')
     original_img = save_preprocessed_img(os.path.join(save_analysis_path, 'original_img.png'), images_test, idx)
 
     # MOST ACTIVATED (NEAREST) 10 PROTOTYPES OF THIS IMAGE
-    log('Most activated 10 prototypes of this image:')
     array_act, sorted_indices_act = torch.sort(prototype_activations[idx])
     for i in tqdm(range(1, args.top_prototypes + 1), desc='Computing most activated prototypes'):
         out_dir = os.path.join(save_analysis_path, 'most_activated_prototypes', f'top-{i}')

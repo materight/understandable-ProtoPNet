@@ -14,12 +14,13 @@ subparsers = parser.add_subparsers()
 
 # Global analysis arguments
 global_parser = subparsers.add_parser('global', help='run global analysis')
+global_parser.add_argument('--dataset', type=str, required=True, help='path of the dataset to use for training and evaluation')
 global_parser.add_argument('--top_patches', type=int, default=5, help='number of most activated patches to be displayed for each prototype (default: %(default)s)')
 global_parser.set_defaults(func=global_analysis.run_analysis)
 
 
 # Local analysis arguments
-local_parser = subparsers.add_parser('local', help='run local protypes analysis')
+local_parser = subparsers.add_parser('local', help='run local prototypes analysis')
 local_parser.add_argument('--img', type=str, required=True, help='path of an image in the dataset to use for evaluation')
 local_parser.add_argument('--top_prototypes', type=int, default=5, help='number of most activated prototypes to be displayed (default: %(default)s)')
 local_parser.add_argument('--top_classes', type=int, default=10, help='number of most activated classes for which display the to prototypes (default: %(default)s)')

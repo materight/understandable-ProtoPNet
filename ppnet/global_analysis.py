@@ -19,8 +19,7 @@ def save_prototype_original_img_with_bbox(load_img_dir, fname, epoch, index,
                                           bbox_height_start, bbox_height_end,
                                           bbox_width_start, bbox_width_end, color=(0, 255, 255)):
     p_img_bgr = cv2.imread(os.path.join(load_img_dir, 'epoch-'+str(epoch), str(index), 'prototype-img-original.png'))
-    cv2.rectangle(p_img_bgr, (bbox_width_start, bbox_height_start), (bbox_width_end-1, bbox_height_end-1),
-                  color, thickness=2)
+    cv2.rectangle(p_img_bgr, (bbox_width_start, bbox_height_start), (bbox_width_end-1, bbox_height_end-1), color, thickness=2)
     p_img_rgb = p_img_bgr[..., ::-1]
     p_img_rgb = np.float32(p_img_rgb) / 255
     plt.axis('off')
@@ -29,7 +28,6 @@ def save_prototype_original_img_with_bbox(load_img_dir, fname, epoch, index,
 
 def run_analysis(args: Namespace):
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpus
-    print('GPUs:', os.environ['CUDA_VISIBLE_DEVICES'])
     train_dir = os.path.join(args.dataset, 'train')
     test_dir = os.path.join(args.dataset, 'test')
 
@@ -38,14 +36,14 @@ def run_analysis(args: Namespace):
     start_epoch_number = int(re.search(r'\d+', model_name).group(0))
 
     # load the model
-    save_analysis_path = os.path.join(args.output, 'global', model_base_architecture, experiment_run, model_name)
+    save_analysis_path = os.path.join(args.out, model_base_architecture, experiment_run, model_name, 'global')
     makedir(save_analysis_path)
     log, logclose = create_logger(log_filename=os.path.join(save_analysis_path, 'global_analysis.log'))
     
-    log(f'load model from: {args.model}')
-    log(f'model epoch: {start_epoch_number}')
-    log(f'model base architecture: {model_base_architecture}')
-    log(f'experiment run: {experiment_run}')
+    log(f'\nLoad model from: {args.model}')
+    log(f'Model epoch: {start_epoch_number}')
+    log(f'Model base architecture: {model_base_architecture}')
+    log(f'Experiment run: {experiment_run}\n')
 
     ppnet = torch.load(args.model)
     ppnet = ppnet.cuda()
@@ -88,12 +86,12 @@ def run_analysis(args: Namespace):
     assert os.path.exists(load_img_dir), f'Folder "{load_img_dir}" does not exist'
     prototype_info = np.load(os.path.join(load_img_dir, f'epoch-{start_epoch_number}', 'bb.npy'))
 
-    for j in range(ppnet.num_prototypes):
+    for j in tqdm(range(ppnet.num_prototypes), desc='Saving prototypes'):
         makedir(os.path.join(root_dir_for_saving_train_images, str(j)))
         makedir(os.path.join(root_dir_for_saving_test_images, str(j)))
         save_prototype_original_img_with_bbox(
             load_img_dir=load_img_dir,
-            fname=os.path.join(root_dir_for_saving_train_images, str(j), 'prototype_in_original_pimg.png'),
+            fname=os.path.join(root_dir_for_saving_train_images, str(j), 'prototype_bbox.png'),
             epoch=start_epoch_number,
             index=j,
             bbox_height_start=prototype_info[j][1],
@@ -104,7 +102,7 @@ def run_analysis(args: Namespace):
         )
         save_prototype_original_img_with_bbox(
             load_img_dir=load_img_dir,
-            fname=os.path.join(root_dir_for_saving_test_images, str(j), 'prototype_in_original_pimg.png'),
+            fname=os.path.join(root_dir_for_saving_test_images, str(j), 'prototype_bbox.png'),
             epoch=start_epoch_number,
             index=j,
             bbox_height_start=prototype_info[j][1],
@@ -114,6 +112,7 @@ def run_analysis(args: Namespace):
             color=(0, 255, 255)
         )
 
+    log('\nSaving nearest prototypes in train set')
     find_k_nearest_patches_to_prototypes(
         dataloader=train_loader,  # pytorch dataloader (must be unnormalized in [0,1])
         prototype_network_parallel=ppnet_multi,  # pytorch network with prototype_vectors
@@ -122,6 +121,7 @@ def run_analysis(args: Namespace):
         full_save=True,
         root_dir_for_saving_images=root_dir_for_saving_train_images,
         log=log)
+    log('\nSaving nearest prototypes in test set')
     find_k_nearest_patches_to_prototypes(
         dataloader=test_loader,  # pytorch dataloader (must be unnormalized in [0,1])
         prototype_network_parallel=ppnet_multi,  # pytorch network with prototype_vectors
