@@ -84,9 +84,9 @@ def run_analysis(args: Namespace):
     makedir(root_dir_for_saving_test_images)
 
     # save prototypes in original images
-    load_img_dir = os.path.join(os.path.dirname(args.model), 'img')
+    load_img_dir = os.path.join(os.path.dirname(args.model), '..', 'img')
     assert os.path.exists(load_img_dir), f'Folder "{load_img_dir}" does not exist'
-    prototype_info = np.load(os.path.join(load_img_dir, f'epoch-{start_epoch_number}', f'bb{start_epoch_number}.npy'))
+    prototype_info = np.load(os.path.join(load_img_dir, f'epoch-{start_epoch_number}', 'bb.npy'))
 
     for j in range(ppnet.num_prototypes):
         makedir(os.path.join(root_dir_for_saving_train_images, str(j)))

@@ -58,7 +58,7 @@ def prune_prototypes(dataloader,
     # prune prototypes
     prototype_network_parallel.module.prune_prototypes(prototypes_to_prune)
     if copy_prototype_imgs:
-        original_img_dir = os.path.join(original_model_dir, 'img', 'epoch-%d' % epoch_number)
+        original_img_dir = os.path.join(original_model_dir, '..', 'img', 'epoch-%d' % epoch_number)
         dst_img_dir = os.path.join(original_model_dir,
                                    'pruned_prototypes_epoch{}_k{}_pt{}'.format(epoch_number, k, prune_threshold),
                                    'img', 'epoch-%d' % epoch_number)
@@ -78,12 +78,12 @@ def prune_prototypes(dataloader,
             shutil.copyfile(src=os.path.join(original_img_dir, prototypes_to_keep[idx] 'prototype-self-act.npy'),
                             dst=os.path.join(dst_img_dir, idx, 'prototype-self-act.npy' % ))
 
-            bb = np.load(os.path.join(original_img_dir, 'bb%d.npy' % epoch_number))
+            bb = np.load(os.path.join(original_img_dir, 'bb.npy'))
             bb = bb[prototypes_to_keep]
-            np.save(os.path.join(dst_img_dir, 'bb%d.npy' % epoch_number), bb)
+            np.save(os.path.join(dst_img_dir, 'bb.npy'), bb)
 
-            bb_rf = np.load(os.path.join(original_img_dir, 'bb-receptive_field%d.npy' % epoch_number))
+            bb_rf = np.load(os.path.join(original_img_dir, 'bb-receptive_field.npy'))
             bb_rf = bb_rf[prototypes_to_keep]
-            np.save(os.path.join(dst_img_dir, 'bb-receptive_field%d.npy' % epoch_number), bb_rf)
+            np.save(os.path.join(dst_img_dir, 'bb-receptive_field.npy'), bb_rf)
 
     return prune_info

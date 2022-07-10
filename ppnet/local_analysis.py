@@ -74,13 +74,13 @@ def run_analysis(args: Namespace):
 
     # Compute params
     img_path = os.path.abspath(args.img)  # ./datasets/celeb_a/gender/test/Male/1.jpg
-    img_dataset, img_dataset_split, img_class, img_name = re.split(r'\\|/', img_path)[-4:]
+    img_dataset, _, img_class, img_name = re.split(r'\\|/', img_path)[-4:]
 
     model_path = os.path.abspath(args.model)  # ./saved_models/vgg19/003/checkpoints/10_18push0.7822.pth
     model_base_architecture, experiment_run, _, model_name = re.split(r'\\|/', model_path)[-4:]
     start_epoch_number = int(re.search(r'\d+', model_name).group(0))
 
-    save_analysis_path = os.path.join(args.output, 'local', model_base_architecture, experiment_run, model_name, img_dataset, img_class, img_name)
+    save_analysis_path = os.path.join(args.out, 'local', model_base_architecture, experiment_run, model_name, img_dataset, img_class, img_name)
     makedir(save_analysis_path)
     log, logclose = create_logger(log_filename=os.path.join(save_analysis_path, 'local_analysis.log'))
 
@@ -97,13 +97,13 @@ def run_analysis(args: Namespace):
     prototype_shape = ppnet.prototype_shape
     max_dist = prototype_shape[1] * prototype_shape[2] * prototype_shape[3]
     normalize = transforms.Normalize(mean=mean, std=std)
-    dataset = datasets.ImageFolder(img_dataset_split)
+    dataset = datasets.ImageFolder(os.path.join(os.path.dirname(img_path), '..'))
 
     # SANITY CHECK
     # confirm prototype class identity
-    load_img_dir = os.path.join(os.path.dirname(args.model), 'img')
+    load_img_dir = os.path.join(os.path.dirname(args.model), '..', 'img')
     assert os.path.exists(load_img_dir), f'Folder "{load_img_dir}" does not exist'
-    prototype_info = np.load(os.path.join(load_img_dir, f'epoch-{start_epoch_number}', f'bb{start_epoch_number}.npy'))
+    prototype_info = np.load(os.path.join(load_img_dir, f'epoch-{start_epoch_number}', 'bb.npy'))
     prototype_img_identity = prototype_info[:, -1]
 
     log('Prototypes are chosen from ' + str(len(set(prototype_img_identity))) + ' number of classes.')
