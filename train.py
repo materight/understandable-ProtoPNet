@@ -15,7 +15,7 @@ parser.add_argument('--epochs', type=int, default=10000, help='number of trainin
 parser.add_argument('--img_size', type=int, default=224, help='resize dimension for training images (default: %(default)s)')
 parser.add_argument('--batch_size', type=int, default=32, help='input batch size (default: %(default)s)')
 parser.add_argument('--warm_epochs', type=int, default=150, help='number of warming epochs (default: %(default)s)')
-parser.add_argument('--step_size', type=int, default=150, help='number of warming epochs (default: %(default)s)')
+parser.add_argument('--step_size', type=int, default=150, help='step size of the learning rate scheduler (default: %(default)s)')
 parser.add_argument('--test_interval', type=int, default=30, help='epoch interval in which to run the model on the test split (default: %(default)s)')
 parser.add_argument('--push_interval', type=int, default=300, help='epoch interval in which to push prototypes (default: %(default)s)')
 
