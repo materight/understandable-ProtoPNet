@@ -79,7 +79,7 @@ def run_analysis(args: Namespace):
     model_base_architecture, experiment_run, _, model_name = re.split(r'\\|/', model_path)[-4:]
     start_epoch_number = int(re.search(r'\d+', model_name).group(0))
 
-    save_analysis_path = os.path.join(args.out, 'local', model_base_architecture, experiment_run, model_name, img_dataset, img_class, img_name)
+    save_analysis_path = os.path.join(args.out, 'local', model_base_architecture, experiment_run, model_name, img_class, img_name)
     makedir(save_analysis_path)
     log, logclose = create_logger(log_filename=os.path.join(save_analysis_path, 'local_analysis.log'))
 
