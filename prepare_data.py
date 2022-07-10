@@ -2,6 +2,7 @@ import os
 import shutil
 import gdown
 import argparse
+import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from PIL import Image
@@ -9,7 +10,8 @@ from PIL import Image
 CUB200_URL = 'https://drive.google.com/uc?id=1hbzc_P1FuxMkcabkgn9ZKinBwW683j45'  # Data taken from https://www.vision.caltech.edu/datasets/cub_200_2011/
 CELEB_A_HQ_URL = 'https://drive.google.com/uc?id=1badu11NqxGf6qM3PTTooQDJvQbejgbTv'  # Data taken from http://mmlab.ie.cuhk.edu.hk/projects/CelebA/CelebAMask_HQ.html
 
-DATASETS_FOLDER = './datasets'
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+DATASETS_FOLDER = f'{PROJECT_ROOT}/datasets'
 
 
 def download_dataset(url: str, filename: str):
@@ -17,14 +19,13 @@ def download_dataset(url: str, filename: str):
     out_path = os.path.join(DATASETS_FOLDER, os.path.splitext(filename)[0], filename)
     if not os.path.exists(out_path):
         os.makedirs(os.path.dirname(out_path), exist_ok=True)
-        gdown.download(url, out_path, quiet=False)
+        gdown.download(url, out_path)
     return out_path
 
 
 def unpack_dataset(filepath: str):
     """Unpack dataset."""
-    filename, extension = os.path.splitext(os.path.basename(filepath))
-    out_path = os.path.join(DATASETS_FOLDER, filename, 'original')
+    out_path = os.path.join(DATASETS_FOLDER, os.path.splitext(os.path.basename(filepath))[0], 'original')
     if not os.path.exists(out_path):
         os.makedirs(out_path, exist_ok=True)
         gdown.extractall(filepath, out_path)
@@ -32,10 +33,12 @@ def unpack_dataset(filepath: str):
 
 
 def generate_cub200():
-    # Download and unpack dataset
-    dataset_path = download_dataset(CUB200_URL, 'cub200.tgz')
-    original_path = unpack_dataset(dataset_path)
-    # Crop images
+    """Generate cub200 dataset."""
+    print('Downloading dataset...')
+    dataset_archive_path = download_dataset(CUB200_URL, 'cub200.tgz')
+    dataset_path = os.path.dirname(dataset_archive_path)
+    print('Unpacking folder...')
+    original_path = unpack_dataset(dataset_archive_path)
     print('Cropping images...')
     img_count = 0
     with open(f'{original_path}/CUB_200_2011/images.txt') as f:
@@ -43,33 +46,65 @@ def generate_cub200():
             img_count += 1
     with open(f'{original_path}/CUB_200_2011/images.txt') as images_file, \
             open(f'{original_path}/CUB_200_2011/bounding_boxes.txt') as bboxes_file, \
-            open(f'{dataoriginal_path_path}/CUB_200_2011/train_test_split.txt') as split_file:
+            open(f'{original_path}/CUB_200_2011/train_test_split.txt') as split_file:
         for images_line, bboxes_line, split_line in tqdm(zip(images_file, bboxes_file, split_file), total=img_count):
             # Read lines
             id1, path = images_line.strip().split(' ')
             id2, x, y, w, h = [int(float(x)) for x in bboxes_line.strip().split(' ')]
             id3, is_training = split_line.strip().split(' ')
             if int(id1) != int(id2) or int(id1) != int(id3):
-                raise ValueError(f'Ids in images.txt and bounding_boxes.txt do not match for {id1}, {id2} and {id3}.')
+                raise ValueError(f'ids in images.txt and bounding_boxes.txt do not match for {id1}, {id2} and {id3}.')
             # Crop image
             img = Image.open(f'{original_path}/CUB_200_2011/images/{path}')
             cropped = img.crop((x, y, x + w, y + h))
             # Save image
-            parent_folder = path.split('/')[0]
-            out_path = f'{dataset_path}/{"train" if bool(int(is_training)) else "test"}/{parent_folder}'
+            class_folder, _ = path.split('/')
+            out_path = f'{dataset_path}/{"train" if bool(int(is_training)) else "test"}/{class_folder}'
             if not os.path.exists(out_path):
                 os.makedirs(out_path)
             cropped.save(f'{out_path}/{id1}.jpg')
 
 
 def generate_celeb_a():
-    # Download and unpack dataset
-    dataset_path = download_dataset(CELEB_A_HQ_URL, 'celeb_a.zip')
-    original_path = unpack_dataset(dataset_path)
-    # Read attribute annotations
-    print('Reading attribute annotations...')
-    attributes = pd.read_csv(f'{original_path}/CelebAMask-HQ-attribute-anno.txt', skiprows=1, sep='\s+', header=None,)
-
+    """Generate celeb_a dataset."""
+    print('Downloading dataset...')
+    dataset_archive_path = download_dataset(CELEB_A_HQ_URL, 'celeb_a.zip')
+    dataset_path = os.path.dirname(dataset_archive_path)
+    print('Unpacking folder...')
+    original_path = unpack_dataset(dataset_archive_path)
+    print('Generating attributes subsplits...')
+    attributes = pd.read_csv(f'{original_path}/CelebAMask-HQ/CelebAMask-HQ-attribute-anno.txt', skiprows=1, sep='\s+')
+    attributes = (attributes == 1)  # Convert to boolean
+    test_split_fraction = 0.3
+    subplits = {
+        'hair': dict(cols=['Black_Hair', 'Blond_Hair', 'Brown_Hair', 'Gray_Hair', 'Bald']),
+        'attractive': dict(col='Attractive', other='Not_Attractive'),
+        'young': dict(col='Young', other='Old'),
+        'gender': dict(col='Male', other='Female'),
+        'smiling': dict(col='Smiling', other='Not_Smiling'),
+        'makeup': dict(col='Heavy_Makeup', other='No_Makeup'),
+    }
+    rng = np.random.default_rng(0)
+    for subsplit_name, properties in subplits.items():
+        subsplit_path = os.path.join(dataset_path, subsplit_name)
+        if os.path.exists(subsplit_path):
+            shutil.rmtree(subsplit_path)
+        os.makedirs(subsplit_path)
+        if 'cols' in properties:  # Multi-class case
+            filtered_attributes = attributes[properties['cols']]
+            filtered_attributes = filtered_attributes[filtered_attributes.sum(axis=1) == 1]  # Discard cases where more than one class is true
+        else:  # Binary-class case
+            filtered_attributes = attributes[properties['col']].to_frame()
+            filtered_attributes[properties['other']] = ~attributes[properties['col']]
+        filtered_attributes = filtered_attributes.idxmax(axis=1).rename('class_name').to_frame()  # Convert from one-hot encoding to class names
+        is_training = rng.choice([True, False], size=len(filtered_attributes), p=[1 - test_split_fraction, test_split_fraction])
+        filtered_attributes['is_training'] = is_training
+        # Create dataset subsplit as hard-links of original images to save space
+        for sample in tqdm(filtered_attributes.itertuples(), desc=f'Generating "{subsplit_name}" subsplit', total=len(filtered_attributes)):
+            sample_path = f'{subsplit_path}/{"train" if sample.is_training else "test"}/{sample.class_name}/{sample.Index}'
+            if not os.path.exists(os.path.dirname(sample_path)):
+                os.makedirs(os.path.dirname(sample_path))
+            os.link(f'{original_path}/CelebAMask-HQ/CelebA-HQ-img/{sample.Index}', sample_path)
 
 
 parser = argparse.ArgumentParser(description='Download and prepare the dataset')
@@ -77,7 +112,7 @@ parser.add_argument('dataset', type=str, choices=['cub200', 'celeb_a'], help='Th
 
 if __name__ == '__main__':
     args = parser.parse_args()
-    print(f'Generating {args.dataset} dataset...')
+    print(f'Generating "{args.dataset}" dataset...')
     if args.dataset == 'cub200':
         generate_cub200()
     elif args.dataset == 'celeb_a':
