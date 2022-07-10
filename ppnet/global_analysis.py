@@ -3,6 +3,7 @@ import re
 from argparse import Namespace
 import numpy as np
 import cv2
+from tqdm import tqdm
 import matplotlib.pyplot as plt
 import torch
 import torch.utils.data
@@ -86,7 +87,7 @@ def run_analysis(args: Namespace):
     assert os.path.exists(load_img_dir), f'Folder "{load_img_dir}" does not exist'
     prototype_info = np.load(os.path.join(load_img_dir, f'epoch-{start_epoch_number}', 'bb.npy'))
 
-    for j in tqdm(range(ppnet.num_prototypes), desc='Saving prototypes'):
+    for j in tqdm(range(ppnet.num_prototypes), desc='Saving learned prototypes'):
         makedir(os.path.join(root_dir_for_saving_train_images, str(j)))
         makedir(os.path.join(root_dir_for_saving_test_images, str(j)))
         save_prototype_original_img_with_bbox(
@@ -112,7 +113,7 @@ def run_analysis(args: Namespace):
             color=(0, 255, 255)
         )
 
-    log('\nSaving nearest prototypes in train set')
+    log('\nSaving nearest prototypes of train set')
     find_k_nearest_patches_to_prototypes(
         dataloader=train_loader,  # pytorch dataloader (must be unnormalized in [0,1])
         prototype_network_parallel=ppnet_multi,  # pytorch network with prototype_vectors
@@ -121,7 +122,7 @@ def run_analysis(args: Namespace):
         full_save=True,
         root_dir_for_saving_images=root_dir_for_saving_train_images,
         log=log)
-    log('\nSaving nearest prototypes in test set')
+    log('\nSaving nearest prototypes of test set')
     find_k_nearest_patches_to_prototypes(
         dataloader=test_loader,  # pytorch dataloader (must be unnormalized in [0,1])
         prototype_network_parallel=ppnet_multi,  # pytorch network with prototype_vectors
