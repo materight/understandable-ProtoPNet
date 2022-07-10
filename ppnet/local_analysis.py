@@ -160,12 +160,12 @@ def run_analysis(args: Namespace):
         )
         save_prototype_self_activation(load_img_dir, os.path.join(out_dir, 'prototype_activation.png'), start_epoch_number, sorted_indices_act[-i].item())
         with open(os.path.join(out_dir, 'info.txt'), 'w') as f:
-            f.write('prototype index: {0}'.format(sorted_indices_act[-i].item()))
-            f.write('prototype class identity: {0}'.format(prototype_img_identity[sorted_indices_act[-i].item()]))
+            f.write('prototype index: {0}\n'.format(sorted_indices_act[-i].item()))
+            f.write('prototype class: {0}\n'.format(prototype_img_identity[sorted_indices_act[-i].item()]))
             if prototype_max_connection[sorted_indices_act[-i].item()] != prototype_img_identity[sorted_indices_act[-i].item()]:
-                f.write('prototype connection identity: {0}'.format(prototype_max_connection[sorted_indices_act[-i].item()]))
-            f.write('activation value (similarity score): {0}'.format(array_act[-i]))
-            f.write('last layer connection with predicted class: {0}'.format(ppnet.last_layer.weight[predicted_cls][sorted_indices_act[-i].item()]))
+                f.write('prototype connection: {0}\n'.format(prototype_max_connection[sorted_indices_act[-i].item()]))
+            f.write('activation value (similarity score): {0:.4f}\n'.format(array_act[-i]))
+            f.write('last layer connection with predicted class: {0:.4f}\n'.format(ppnet.last_layer.weight[predicted_cls][sorted_indices_act[-i].item()]))
         activation_pattern = prototype_activation_patterns[idx][sorted_indices_act[-i].item()].detach().cpu().numpy()
         upsampled_activation_pattern = cv2.resize(activation_pattern, dsize=(img_size, img_size), interpolation=cv2.INTER_CUBIC)
 
@@ -221,14 +221,13 @@ def run_analysis(args: Namespace):
             )
             save_prototype_self_activation(load_img_dir, os.path.join(prototype_dir, 'prototype_activation.png'), start_epoch_number, prototype_index)
             with open(os.path.join(prototype_dir, 'info.txt'), 'w') as f:
-                f.write('class: {0}'.format(c))
-                f.write('class logits: {0}'.format(topk_logits[i]))
-                f.write('prototype index: {0}'.format(prototype_index))
-                f.write('prototype class identity: {0}'.format(prototype_img_identity[prototype_index]))
+                f.write('prototype index: {0}\n'.format(prototype_index))
+                f.write('prototype class: {0}\n'.format(prototype_img_identity[prototype_index]))
+                f.write('prototype class logits: {0:.4f}\n'.format(topk_logits[i]))
                 if prototype_max_connection[prototype_index] != prototype_img_identity[prototype_index]:
-                    f.write('prototype connection identity: {0}'.format(prototype_max_connection[prototype_index]))
-                f.write('activation value (similarity score): {0}'.format(prototype_activations[idx][prototype_index]))
-                f.write('last layer connection: {0}'.format(ppnet.last_layer.weight[c][prototype_index]))
+                    f.write('prototype connection: {0}\n'.format(prototype_max_connection[prototype_index]))
+                f.write('activation value (similarity score): {0:.4f}\n'.format(prototype_activations[idx][prototype_index]))
+                f.write('last layer connection: {0:.4f}\n'.format(ppnet.last_layer.weight[c][prototype_index]))
 
             activation_pattern = prototype_activation_patterns[idx][prototype_index].detach().cpu().numpy()
             upsampled_activation_pattern = cv2.resize(activation_pattern, dsize=(img_size, img_size), interpolation=cv2.INTER_CUBIC)

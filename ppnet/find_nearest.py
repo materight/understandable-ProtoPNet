@@ -1,14 +1,10 @@
-import torch
-import numpy as np
-
-import heapq
-
-import matplotlib.pyplot as plt
 import os
-import copy
 import time
-
+import heapq
+import matplotlib.pyplot as plt
 import cv2
+import numpy as np
+import torch
 
 from .receptive_field import compute_rf_prototype
 from .helpers import makedir, find_high_activation_crop
@@ -21,8 +17,7 @@ def imsave_with_bbox(fname, img_rgb, bbox_height_start, bbox_height_end,
                   color, thickness=2)
     img_rgb_uint8 = img_bgr_uint8[..., ::-1]
     img_rgb_float = np.float32(img_rgb_uint8) / 255
-    # plt.imshow(img_rgb_float)
-    # plt.axis('off')
+    plt.axis('off')
     plt.imsave(fname, img_rgb_float)
 
 
@@ -82,21 +77,16 @@ def find_k_nearest_patches_to_prototypes(dataloader,  # pytorch dataloader (must
         heaps.append([])
 
     for idx, (search_batch_input, search_y) in enumerate(dataloader):
-        print('batch {}'.format(idx))
+        log('batch {}'.format(idx))
         if preprocess_input_function is not None:
-            # print('preprocessing input for pushing ...')
-            # search_batch = copy.deepcopy(search_batch_input)
             search_batch = preprocess_input_function(search_batch_input)
-
         else:
             search_batch = search_batch_input
 
         with torch.no_grad():
             search_batch = search_batch.cuda()
-            protoL_input_torch, proto_dist_torch = \
-                prototype_network_parallel.module.push_forward(search_batch)
+            protoL_input_torch, proto_dist_torch = prototype_network_parallel.module.push_forward(search_batch)
 
-        #protoL_input_ = np.copy(protoL_input_torch.detach().cpu().numpy())
         proto_dist_ = np.copy(proto_dist_torch.detach().cpu().numpy())
 
         for img_idx, distance_map in enumerate(proto_dist_):
