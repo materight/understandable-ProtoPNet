@@ -1,6 +1,6 @@
 import argparse
 
-from ppnet import cli
+from ppnet.train_and_test import run_training
 
 # Script arguments
 parser = argparse.ArgumentParser(description='Train a new ProtoPNet model', formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=42))
@@ -29,4 +29,4 @@ parser.add_argument('--seed', type=int, default=0, help='random seed to use (def
 args = parser.parse_args()
 
 # Start training
-cli.train(args)
+run_training(args)
