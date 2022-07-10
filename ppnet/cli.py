@@ -15,7 +15,7 @@ from .preprocess import mean, std, preprocess_input_function
 
 def train(args: Namespace):
     # Set default values
-    prototype_shape = (2000, 128, 1, 1)
+    prototype_shape = (args.num_prototypes, 128, 1, 1)
     joint_optimizer_lrs = dict(
         features=1e-4,
         add_on_layers=3e-3,
@@ -55,7 +55,6 @@ def train(args: Namespace):
 
     img_dir = os.path.join(model_dir, 'img')
     os.makedirs(img_dir, exist_ok=True)
-    weight_matrix_filename = 'outputL_weights'
     prototype_img_filename_prefix = 'prototype-img'
     prototype_self_act_filename_prefix = 'prototype-self-act'
     proto_bound_boxes_filename_prefix = 'bb'
@@ -113,7 +112,7 @@ def train(args: Namespace):
     ppnet = model.construct_PPNet(base_architecture=args.architecture,
                                   pretrained=True, img_size=args.img_size,
                                   prototype_shape=prototype_shape,
-                                  num_classes=args.num_classes,
+                                  num_classes=len(train_dataset.classes),
                                   prototype_activation_function=args.prototype_activation_function,
                                   add_on_layers_type=args.add_on_layers)
     # if prototype_activation_function == 'linear':
