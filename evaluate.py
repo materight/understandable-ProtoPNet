@@ -14,6 +14,7 @@ subparsers = parser.add_subparsers()
 
 # Global analysis arguments
 global_parser = subparsers.add_parser('global', help='run global analysis')
+global_parser.add_argument('--top_patches', type=int, default=5, help='number of most activated patches to be displayed for each prototype (default: %(default)s)')
 global_parser.set_defaults(func=global_analysis.run_analysis)
 
 

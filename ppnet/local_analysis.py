@@ -13,7 +13,6 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 
 from .helpers import makedir, find_high_activation_crop
-from . import train_and_test as tnt
 from .log import create_logger
 from .preprocess import mean, std, undo_preprocess_input_function
 
@@ -80,15 +79,13 @@ def run_analysis(args: Namespace):
 
     model_path = os.path.abspath(args.model)  # ./saved_models/vgg19/003/10_18push0.7822.pth
     model_base_architecture, experiment_run, model_name = re.split(r'\\|/', model_path)[-3:]
+    start_epoch_number = int(re.search(r'\d+', model_name).group(0))
 
-    save_analysis_path = os.path.join(args.output, model_base_architecture, experiment_run, model_name, img_dataset, img_class, img_name)
+    save_analysis_path = os.path.join(args.output, 'local', model_base_architecture, experiment_run, model_name, img_dataset, img_class, img_name)
     makedir(save_analysis_path)
-
     log, logclose = create_logger(log_filename=os.path.join(save_analysis_path, 'local_analysis.log'))
-    epoch_number_str = re.search(r'\d+', model_name).group(0)
-    start_epoch_number = int(epoch_number_str)
 
-    log(f'load model from {args.model}')
+    log(f'load model from: {args.model}')
     log(f'model epoch: {start_epoch_number}')
     log(f'model base architecture: {model_base_architecture}')
     log(f'experiment run: {experiment_run}')
@@ -101,21 +98,13 @@ def run_analysis(args: Namespace):
     prototype_shape = ppnet.prototype_shape
     max_dist = prototype_shape[1] * prototype_shape[2] * prototype_shape[3]
     normalize = transforms.Normalize(mean=mean, std=std)
-
-    # load the test data and check test accuracy
-    test_dataset = datasets.ImageFolder(
-        test_dir,
-        transforms.Compose([
-            transforms.Resize(size=(img_size, img_size)),
-            transforms.ToTensor(),
-            normalize,
-        ]))
+    test_dataset = datasets.ImageFolder(test_dir)
 
     # SANITY CHECK
     # confirm prototype class identity
     load_img_dir = os.path.join(os.path.dirname(args.model), 'img')
     assert os.path.exists(load_img_dir), f'Folder "{load_img_dir}" does not exist'
-    prototype_info = np.load(os.path.join(load_img_dir, 'epoch-'+epoch_number_str, 'bb'+epoch_number_str+'.npy'))
+    prototype_info = np.load(os.path.join(load_img_dir, f'epoch-{start_epoch_number}', f'bb{start_epoch_number}.npy'))
     prototype_img_identity = prototype_info[:, -1]
 
     log('Prototypes are chosen from ' + str(len(set(prototype_img_identity))) + ' number of classes.')
