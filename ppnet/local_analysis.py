@@ -71,11 +71,10 @@ def imsave_with_bbox(fname, img_rgb, bbox_height_start, bbox_height_end,
 def run_analysis(args: Namespace):
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpus
     print('GPUs:', os.environ['CUDA_VISIBLE_DEVICES'])
-    test_dir = os.path.join(args.dataset, 'test')
 
     # Compute params
     img_path = os.path.abspath(args.img)  # ./datasets/celeb_a/gender/test/Male/1.jpg
-    img_dataset, _, img_class, img_name = re.split(r'\\|/', img_path)[-4:]
+    img_dataset, img_dataset_split, img_class, img_name = re.split(r'\\|/', img_path)[-4:]
 
     model_path = os.path.abspath(args.model)  # ./saved_models/vgg19/003/checkpoints/10_18push0.7822.pth
     model_base_architecture, experiment_run, _, model_name = re.split(r'\\|/', model_path)[-4:]
@@ -98,7 +97,7 @@ def run_analysis(args: Namespace):
     prototype_shape = ppnet.prototype_shape
     max_dist = prototype_shape[1] * prototype_shape[2] * prototype_shape[3]
     normalize = transforms.Normalize(mean=mean, std=std)
-    test_dataset = datasets.ImageFolder(test_dir)
+    dataset = datasets.ImageFolder(img_dataset_split)
 
     # SANITY CHECK
     # confirm prototype class identity
@@ -130,7 +129,7 @@ def run_analysis(args: Namespace):
     img_variable = Variable(img_tensor.unsqueeze(0))
 
     images_test = img_variable.cuda()
-    labels_test = torch.tensor([ test_dataset.class_to_idx[img_class] ])
+    labels_test = torch.tensor([ dataset.class_to_idx[img_class] ])
 
     logits, min_distances = ppnet_multi(images_test)
     _, distances = ppnet.push_forward(images_test)
@@ -220,7 +219,7 @@ def run_analysis(args: Namespace):
 
     # PROTOTYPES FROM TOP-k CLASSES
     k = args.top_classes
-    assert k < len(test_dataset.classes), 'k must be less than the number of available classes'
+    assert k < len(dataset.classes), 'k must be less than the number of available classes'
     log('Prototypes from top-%d classes:' % k)
     topk_logits, topk_classes = torch.topk(logits[idx], k=k)
     for i, c in enumerate(topk_classes.detach().cpu().numpy()):
