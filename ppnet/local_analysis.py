@@ -176,6 +176,7 @@ def run_analysis(args: Namespace):
             color=(0, 255, 255)
         )
         save_prototype_self_activation(
+            load_img_dir,
             os.path.join(save_analysis_path, 'most_activated_prototypes', 'top-%d_activated_prototype_self_act.png' % i),
             start_epoch_number,
             sorted_indices_act[-i].item()
