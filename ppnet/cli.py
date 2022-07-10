@@ -41,8 +41,8 @@ def train(args: Namespace):
     base_architecture_type = re.match('^[a-z]*', args.architecture).group(0)
     model_dir = os.path.join('./saved_models', args.architecture, args.exp_name)
     if os.path.exists(model_dir):
-        print(f'Model directory "{args.exp_name}" already exists, overwriting...')
-    else:    
+        print(f'Warning: model directory "{args.exp_name}" already exists, overwriting...')
+    else:
         os.makedirs(model_dir)
     log, logclose = create_logger(log_filename=os.path.join(model_dir, 'train.log'))
     shutil.copy(src=os.path.join(os.getcwd(), __file__), dst=model_dir)
