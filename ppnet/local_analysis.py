@@ -36,8 +36,8 @@ def save_prototype(load_img_dir, fname, epoch, index):
 
 
 def save_prototype_self_activation(load_img_dir, fname, epoch, index):
-    p_img = plt.imread(os.path.join(load_img_dir, 'epoch-'+str(epoch),
-                                    'prototype-img-original_with_self_act'+str(index)+'.png'))
+    p_img = plt.imread(os.path.join(load_img_dir, 'epoch-'+str(epoch), str(index),
+                                    'prototype-img-original_with_self_act.png'))
     # plt.axis('off')
     plt.imsave(fname, p_img)
 
@@ -45,7 +45,7 @@ def save_prototype_self_activation(load_img_dir, fname, epoch, index):
 def save_prototype_original_img_with_bbox(load_img_dir, fname, epoch, index,
                                           bbox_height_start, bbox_height_end,
                                           bbox_width_start, bbox_width_end, color=(0, 255, 255)):
-    p_img_bgr = cv2.imread(os.path.join(load_img_dir, 'epoch-'+str(epoch), 'prototype-img-original'+str(index)+'.png'))
+    p_img_bgr = cv2.imread(os.path.join(load_img_dir, 'epoch-'+str(epoch), str(index), 'prototype-img-original.png'))
     cv2.rectangle(p_img_bgr, (bbox_width_start, bbox_height_start), (bbox_width_end-1, bbox_height_end-1),
                   color, thickness=2)
     p_img_rgb = p_img_bgr[..., ::-1]
@@ -77,8 +77,8 @@ def run_analysis(args: Namespace):
     img_path = os.path.abspath(args.img)  # ./datasets/celeb_a/gender/test/Male/1.jpg
     img_dataset, _, img_class, img_name = re.split(r'\\|/', img_path)[-4:]
 
-    model_path = os.path.abspath(args.model)  # ./saved_models/vgg19/003/10_18push0.7822.pth
-    model_base_architecture, experiment_run, model_name = re.split(r'\\|/', model_path)[-3:]
+    model_path = os.path.abspath(args.model)  # ./saved_models/vgg19/003/checkpoints/10_18push0.7822.pth
+    model_base_architecture, experiment_run, _, model_name = re.split(r'\\|/', model_path)[-4:]
     start_epoch_number = int(re.search(r'\d+', model_name).group(0))
 
     save_analysis_path = os.path.join(args.output, 'local', model_base_architecture, experiment_run, model_name, img_dataset, img_class, img_name)

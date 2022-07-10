@@ -1,5 +1,4 @@
 import os
-import shutil
 import re
 import time
 from tqdm import tqdm
@@ -224,10 +223,6 @@ def run_training(args: Namespace):
     else:
         os.makedirs(model_dir)
     log, logclose = create_logger(log_filename=os.path.join(model_dir, 'train.log'))
-    shutil.copy(src=os.path.join(os.getcwd(), __file__), dst=model_dir)
-    shutil.copy(src=os.path.join(os.getcwd(), 'ppnet', base_architecture_type + '_features.py'), dst=model_dir)
-    shutil.copy(src=os.path.join(os.getcwd(), 'ppnet', 'model.py'), dst=model_dir)
-    shutil.copy(src=os.path.join(os.getcwd(), 'ppnet', 'train_and_test.py'), dst=model_dir)
     with open(os.path.join(model_dir, 'args.yaml'), 'w') as f:
         for k, v in vars(args).items():
             f.write(f'{k}: {v}\n')

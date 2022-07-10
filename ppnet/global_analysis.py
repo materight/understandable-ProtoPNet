@@ -18,7 +18,7 @@ from .preprocess import preprocess_input_function
 def save_prototype_original_img_with_bbox(load_img_dir, fname, epoch, index,
                                           bbox_height_start, bbox_height_end,
                                           bbox_width_start, bbox_width_end, color=(0, 255, 255)):
-    p_img_bgr = cv2.imread(os.path.join(load_img_dir, 'epoch-'+str(epoch), 'prototype-img-original'+str(index)+'.png'))
+    p_img_bgr = cv2.imread(os.path.join(load_img_dir, 'epoch-'+str(epoch), str(index), 'prototype-img-original.png'))
     cv2.rectangle(p_img_bgr, (bbox_width_start, bbox_height_start), (bbox_width_end-1, bbox_height_end-1),
                   color, thickness=2)
     p_img_rgb = p_img_bgr[..., ::-1]
@@ -33,8 +33,8 @@ def run_analysis(args: Namespace):
     train_dir = os.path.join(args.dataset, 'train')
     test_dir = os.path.join(args.dataset, 'test')
 
-    model_path = os.path.abspath(args.model)  # ./saved_models/vgg19/003/10_18push0.7822.pth
-    model_base_architecture, experiment_run, model_name = re.split(r'\\|/', model_path)[-3:]
+    model_path = os.path.abspath(args.model)  # ./saved_models/vgg19/003/checkpoints/10_18push0.7822.pth
+    model_base_architecture, experiment_run, _, model_name = re.split(r'\\|/', model_path)[-4:]
     start_epoch_number = int(re.search(r'\d+', model_name).group(0))
 
     # load the model
