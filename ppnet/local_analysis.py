@@ -30,15 +30,14 @@ def save_preprocessed_img(fname, preprocessed_imgs, index=0):
 
 
 def save_prototype(load_img_dir, fname, epoch, index):
-    p_img = plt.imread(os.path.join(load_img_dir, 'epoch-'+str(epoch), 'prototype-img'+str(index)+'.png'))
-    # plt.axis('off')
+    p_img = plt.imread(os.path.join(load_img_dir, 'epoch-'+str(epoch), str(index), 'prototype-img.png'))
+    plt.axis('off')
     plt.imsave(fname, p_img)
 
 
 def save_prototype_self_activation(load_img_dir, fname, epoch, index):
-    p_img = plt.imread(os.path.join(load_img_dir, 'epoch-'+str(epoch), str(index),
-                                    'prototype-img-original_with_self_act.png'))
-    # plt.axis('off')
+    p_img = plt.imread(os.path.join(load_img_dir, 'epoch-'+str(epoch), str(index), 'prototype-img-original_with_self_act.png'))
+    plt.axis('off')
     plt.imsave(fname, p_img)
 
 
@@ -159,21 +158,28 @@ def run_analysis(args: Namespace):
     array_act, sorted_indices_act = torch.sort(prototype_activations[idx])
     for i in range(1, args.top_prototypes + 1):
         log('top {0} activated prototype for this image:'.format(i))
-        save_prototype(load_img_dir, os.path.join(save_analysis_path, 'most_activated_prototypes',
-                                    'top-%d_activated_prototype.png' % i),
-                    start_epoch_number, sorted_indices_act[-i].item())
-        save_prototype_original_img_with_bbox(fname=os.path.join(save_analysis_path, 'most_activated_prototypes',
-                                                                'top-%d_activated_prototype_in_original_pimg.png' % i),
-                                            epoch=start_epoch_number,
-                                            index=sorted_indices_act[-i].item(),
-                                            bbox_height_start=prototype_info[sorted_indices_act[-i].item()][1],
-                                            bbox_height_end=prototype_info[sorted_indices_act[-i].item()][2],
-                                            bbox_width_start=prototype_info[sorted_indices_act[-i].item()][3],
-                                            bbox_width_end=prototype_info[sorted_indices_act[-i].item()][4],
-                                            color=(0, 255, 255))
-        save_prototype_self_activation(os.path.join(save_analysis_path, 'most_activated_prototypes',
-                                                    'top-%d_activated_prototype_self_act.png' % i),
-                                    start_epoch_number, sorted_indices_act[-i].item())
+        save_prototype(
+            load_img_dir,
+            os.path.join(save_analysis_path, 'most_activated_prototypes', 'top-%d_activated_prototype.png' % i),
+            start_epoch_number,
+            sorted_indices_act[-i].item()
+        )
+        save_prototype_original_img_with_bbox(
+            load_img_dir=load_img_dir,
+            fname=os.path.join(save_analysis_path, 'most_activated_prototypes', 'top-%d_activated_prototype_in_original_pimg.png' % i),
+            epoch=start_epoch_number,
+            index=sorted_indices_act[-i].item(),
+            bbox_height_start=prototype_info[sorted_indices_act[-i].item()][1],
+            bbox_height_end=prototype_info[sorted_indices_act[-i].item()][2],
+            bbox_width_start=prototype_info[sorted_indices_act[-i].item()][3],
+            bbox_width_end=prototype_info[sorted_indices_act[-i].item()][4],
+            color=(0, 255, 255)
+        )
+        save_prototype_self_activation(
+            os.path.join(save_analysis_path, 'most_activated_prototypes', 'top-%d_activated_prototype_self_act.png' % i),
+            start_epoch_number,
+            sorted_indices_act[-i].item()
+        )
         log('prototype index: {0}'.format(sorted_indices_act[-i].item()))
         log('prototype class identity: {0}'.format(prototype_img_identity[sorted_indices_act[-i].item()]))
         if prototype_max_connection[sorted_indices_act[-i].item()] != prototype_img_identity[sorted_indices_act[-i].item()]:
