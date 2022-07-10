@@ -5,8 +5,8 @@ from ppnet.train_and_test import run_training
 # Script arguments
 parser = argparse.ArgumentParser(description='Train a new ProtoPNet model', formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=42))
 
-parser.add_argument('--exp_name', type=str, required=True, help='id of the current experiment')
 parser.add_argument('--dataset', type=str, required=True, help='path of the dataset to use for training and evaluation')
+parser.add_argument('--exp_name', type=str, required=True, help='id of the current experiment')
 
 parser.add_argument('--architecture', type=str, default= 'resnet34', help='model architecture to use as backbone (default: %(default)s)', choices=['resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152', 'densenet121', 'densenet161', 'densenet169', 'densenet201', 'vgg11', 'vgg13', 'vgg16', 'vgg19', 'vgg11_bn', 'vgg13_bn', 'vgg16_bn', 'vgg19_bn'])
 parser.add_argument('--num_prototypes', type=int, default=2000, help='number of prototypes to be learned (default: %(default)s)')

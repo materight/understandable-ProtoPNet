@@ -14,7 +14,11 @@
     ```
 
 ## Train a model
-TODO
+To train a new model on a dataset, run:
+```shell
+python train.py --dataset [data_path] --exp_name [experiment_name]
+```
+Additional options can be specified (run the script with `--help` to see the available ones).
 
 ## Evaluate learned prototypes
 TODO
