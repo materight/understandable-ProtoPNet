@@ -361,7 +361,7 @@ def run_training(args: Namespace):
                                   class_specific=class_specific, coefs=coefs, log=log)
                     accu = test(model=ppnet_multi, dataloader=test_loader,
                                     class_specific=class_specific, log=log)
-                    save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=f'{epoch:03d}_{i}push', accu=accu,
+                    save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=f'{epoch:03d}_{i:02d}push', accu=accu,
                                                 target_accu=0.70, log=log)
         log('------------------------------------------\n')
     logclose()
