@@ -30,4 +30,7 @@ local_parser.set_defaults(func=local_analysis.run_analysis)
 if __name__ == '__main__':
     # Start evaluation
     args = parser.parse_args()
-    args.func(args)
+    if 'func' in args:
+        args.func(args)
+    else:
+        raise RuntimeError('Specify analysis type: "global" or "local".')
