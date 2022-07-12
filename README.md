@@ -24,4 +24,4 @@ Additional options can be specified (run the script with `--help` to see the ava
 TODO
 
 ## Acknowledgments
-This code is based on the original [ProtoPNet](https://github.com/cfchen-duke/ProtoPNet) implementation.
+This implementation is based on the original [ProtoPNet](https://github.com/cfchen-duke/ProtoPNet) repository.
