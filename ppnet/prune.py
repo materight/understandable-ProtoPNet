@@ -72,16 +72,16 @@ def prune_prototypes(
         prototypes_to_keep = list(set(range(original_num_prototypes)) - set(prototypes_to_prune))
 
         for idx in range(len(prototypes_to_keep)):
-            shutil.copyfile(src=os.path.join(original_img_dir, prototypes_to_keep[idx], 'prototype-img.png'),
+            shutil.copyfile(src=os.path.join(original_img_dir, str(prototypes_to_keep[idx]), 'prototype-img.png'),
                             dst=os.path.join(dst_img_dir, idx, 'prototype-img.png'))
 
-            shutil.copyfile(src=os.path.join(original_img_dir, prototypes_to_keep[idx], 'prototype-img-original.png'),
+            shutil.copyfile(src=os.path.join(original_img_dir, str(prototypes_to_keep[idx]), 'prototype-img-original.png'),
                             dst=os.path.join(dst_img_dir, idx, 'prototype-img-original.png'))
 
-            shutil.copyfile(src=os.path.join(original_img_dir, prototypes_to_keep[idx], 'prototype-img-original_with_self_act.png'),
+            shutil.copyfile(src=os.path.join(original_img_dir, str(prototypes_to_keep[idx]), 'prototype-img-original_with_self_act.png'),
                             dst=os.path.join(dst_img_dir, idx, 'prototype-img-original_with_self_act.png'))
 
-            shutil.copyfile(src=os.path.join(original_img_dir, prototypes_to_keep[idx], 'prototype-self-act.npy'),
+            shutil.copyfile(src=os.path.join(original_img_dir, str(prototypes_to_keep[idx]), 'prototype-self-act.npy'),
                             dst=os.path.join(dst_img_dir, idx, 'prototype-self-act.npy'))
 
             bb = np.load(os.path.join(original_img_dir, 'bb.npy'))
@@ -111,7 +111,7 @@ def run_pruning(args: Namespace):
 
     assert 'nopush' not in original_model_name, 'Pruning must happen after pushing prototypes'
     epoch = int(original_model_name.split('push')[0].split('_')[0])
-    model_dir = os.path.join(original_model_dir, 'pruned_prototypes_epoch{}_k{}_pt{}'.format(epoch, k, args.prune_threshold))
+    model_dir = os.path.join(original_model_dir, '..', 'pruned_prototypes', f'epoch{epoch:03d}_k{k}_pt{args.prune_threshold}')
     makedir(model_dir)
     log, logclose = create_logger(log_filename=os.path.join(model_dir, 'prune.log'))
 
