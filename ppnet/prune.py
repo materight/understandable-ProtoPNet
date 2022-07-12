@@ -112,8 +112,6 @@ def run_pruning(args: Namespace):
     epoch = int(original_model_name.split('push')[0].split('_')[0])
     model_dir = os.path.join(original_model_dir, 'pruned_prototypes_epoch{}_k{}_pt{}'.format(epoch, k, args.prune_threshold))
     makedir(model_dir)
-    shutil.copy(src=os.path.join(os.getcwd(), __file__), dst=model_dir)
-
     log, logclose = create_logger(log_filename=os.path.join(model_dir, 'prune.log'))
 
     ppnet = torch.load(args.model)
