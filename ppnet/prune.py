@@ -59,14 +59,15 @@ def prune_prototypes(
             dim=1).numpy().reshape(-1, 1)
     prototypes_to_prune_np = np.array(prototypes_to_prune).reshape(-1, 1)
     prune_info = np.hstack((prototypes_to_prune_np, class_of_prototypes_to_prune))
-    makedir(os.path.join(original_model_dir, 'pruned_prototypes_epoch{}_k{}_pt{}'.format(epoch_number, k, prune_threshold)))
-    np.save(os.path.join(original_model_dir, 'pruned_prototypes_epoch{}_k{}_pt{}'.format(epoch_number, k, prune_threshold), 'prune_info.npy'), prune_info)
+    pruned_dir = os.path.join(original_model_dir, '..', 'pruned_prototypes', f'epoch{epoch_number:03d}_k{k}_pt{prune_threshold}')
+    makedir(pruned_dir)
+    np.save(os.path.join(pruned_dir, 'prune_info.npy'), prune_info)
 
     # prune prototypes
     prototype_network_parallel.module.prune_prototypes(prototypes_to_prune)
     if copy_prototype_imgs:
         original_img_dir = os.path.join(original_model_dir, '..', 'img', 'epoch-%d' % epoch_number)
-        dst_img_dir = os.path.join(original_model_dir, 'pruned_prototypes_epoch{}_k{}_pt{}'.format(epoch_number, k, prune_threshold), 'img', 'epoch-%d' % epoch_number)
+        dst_img_dir = os.path.join(pruned_dir, 'img', 'epoch-%d' % epoch_number)
         makedir(dst_img_dir)
         prototypes_to_keep = list(set(range(original_num_prototypes)) - set(prototypes_to_prune))
 
