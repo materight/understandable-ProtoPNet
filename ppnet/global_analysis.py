@@ -51,8 +51,6 @@ def run_analysis(args: Namespace):
     ppnet_multi = torch.nn.DataParallel(ppnet)
 
     img_size = ppnet_multi.module.img_size
-
-    # load the data
     batch_size = 100
 
     # train set: do not normalize
