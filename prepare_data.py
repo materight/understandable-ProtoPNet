@@ -1,4 +1,5 @@
 import os
+import glob
 import shutil
 import gdown
 import argparse
@@ -39,14 +40,18 @@ def generate_cub200():
     dataset_path = os.path.dirname(dataset_archive_path)
     print('Unpacking folder...')
     original_path = unpack_dataset(dataset_archive_path)
+    print('Generating parts locations...')
+    part_names = pd.read_csv(f'{original_path}/CUB_200_2011/parts/parts.txt', header=None)[0].str.split(' ', n=1, expand=True).rename(columns={0: 'part_id', 1: 'part_name'}).astype({'part_id': int})
+    part_locs = pd.read_csv(f'{original_path}/CUB_200_2011/parts/part_locs.txt', header=None, names=['image_id', 'part_id', 'x', 'y', 'visible'], sep=' ').drop('visible', axis=1)
+    part_locs = part_locs.merge(part_names, on='part_id').drop('part_id', axis=1)
+    part_locs.to_csv(f'{dataset_path}/part_locs.csv', index=False)
     print('Cropping images...')
     img_count = 0
     with open(f'{original_path}/CUB_200_2011/images.txt') as f:
-        for line in f:
-            img_count += 1
+        for line in f: img_count += 1
     with open(f'{original_path}/CUB_200_2011/images.txt') as images_file, \
-            open(f'{original_path}/CUB_200_2011/bounding_boxes.txt') as bboxes_file, \
-            open(f'{original_path}/CUB_200_2011/train_test_split.txt') as split_file:
+         open(f'{original_path}/CUB_200_2011/bounding_boxes.txt') as bboxes_file, \
+         open(f'{original_path}/CUB_200_2011/train_test_split.txt') as split_file:
         for images_line, bboxes_line, split_line in tqdm(zip(images_file, bboxes_file, split_file), total=img_count):
             # Read lines
             id1, path = images_line.strip().split(' ')
@@ -72,6 +77,14 @@ def generate_celeb_a():
     dataset_path = os.path.dirname(dataset_archive_path)
     print('Unpacking folder...')
     original_path = unpack_dataset(dataset_archive_path)
+    print('Generating parts locations...')
+    part_locs = []
+    for filepath in tqdm(glob.glob(f'{original_path}/CelebAMask-HQ//CelebAMask-HQ-mask-anno/*/*.png')):
+        filename, _ = os.path.basename(filepath).split('.')
+        image_id, part_name = filename.split('_', maxsplit=1)
+        mask = np.asarray(Image.open(filepath).convert('L'))
+        # TODO: comput x and y from mask
+        part_locs.append((image_id, x, y, part_name))
     print('Generating attributes subsplits...')
     attributes = pd.read_csv(f'{original_path}/CelebAMask-HQ/CelebAMask-HQ-attribute-anno.txt', skiprows=1, sep='\s+')
     attributes = (attributes == 1)  # Convert to boolean

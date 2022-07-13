@@ -27,6 +27,11 @@ local_parser.add_argument('--top_classes', type=int, default=10, help='number of
 local_parser.set_defaults(func=local_analysis.run_analysis)
 
 
+# Alignemnt scores arguments
+local_parser = subparsers.add_parser('alignment', help='run alignemnt score analysis')
+
+
+
 if __name__ == '__main__':
     # Start evaluation
     args = parser.parse_args()
