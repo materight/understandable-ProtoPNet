@@ -19,7 +19,7 @@ from .preprocess import preprocess_input_function
 def save_prototype_original_img_with_bbox(load_img_dir, fname, epoch, index,
                                           bbox_height_start, bbox_height_end,
                                           bbox_width_start, bbox_width_end, color=(0, 255, 255)):
-    p_img_bgr = cv2.imread(os.path.join(load_img_dir, 'epoch-'+str(epoch), str(index), 'prototype-img-original.png'))
+    p_img_bgr = cv2.imread(os.path.join(load_img_dir, 'epoch-'+str(epoch), str(index) + '_prototype-img-original.png'))
     cv2.rectangle(p_img_bgr, (bbox_width_start, bbox_height_start), (bbox_width_end-1, bbox_height_end-1), color, thickness=2)
     p_img_rgb = p_img_bgr[..., ::-1]
     p_img_rgb = np.float32(p_img_rgb) / 255
