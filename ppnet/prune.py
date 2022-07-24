@@ -72,17 +72,17 @@ def prune_prototypes(
         prototypes_to_keep = list(set(range(original_num_prototypes)) - set(prototypes_to_prune))
 
         for idx in range(len(prototypes_to_keep)):
-            shutil.copyfile(src=os.path.join(original_img_dir, str(prototypes_to_keep[idx]) + '_prototype-img.png'),
-                            dst=os.path.join(dst_img_dir, str(idx) + '_prototype-img.png'))
+            shutil.copyfile(src=os.path.join(original_img_dir, str(prototypes_to_keep[idx]), 'prototype-img.png'),
+                            dst=os.path.join(dst_img_dir, str(idx), 'prototype-img.png'))
 
-            shutil.copyfile(src=os.path.join(original_img_dir, str(prototypes_to_keep[idx]) + '_prototype-img-original.png'),
-                            dst=os.path.join(dst_img_dir, str(idx) + '_prototype-img-original.png'))
+            shutil.copyfile(src=os.path.join(original_img_dir, str(prototypes_to_keep[idx]), 'prototype-img-original.png'),
+                            dst=os.path.join(dst_img_dir, str(idx), 'prototype-img-original.png'))
 
             shutil.copyfile(src=os.path.join(original_img_dir, str(prototypes_to_keep[idx]) + '_prototype-img-original_with_self_act.png'),
-                            dst=os.path.join(dst_img_dir, str(idx) + '_prototype-img-original_with_self_act.png'))
+                            dst=os.path.join(dst_img_dir, str(idx), 'prototype-img-original_with_self_act.png'))
 
             shutil.copyfile(src=os.path.join(original_img_dir, str(prototypes_to_keep[idx]) + '_prototype-self-act.npy'),
-                            dst=os.path.join(dst_img_dir, str(idx) + '_prototype-self-act.npy'))
+                            dst=os.path.join(dst_img_dir, str(idx), 'prototype-self-act.npy'))
 
             bb = np.load(os.path.join(original_img_dir, 'bb.npy'))
             bb = bb[prototypes_to_keep]
