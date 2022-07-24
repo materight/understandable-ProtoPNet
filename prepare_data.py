@@ -3,9 +3,11 @@ import glob
 import shutil
 import gdown
 import argparse
+import multiprocessing as mp
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
+import cv2
 from PIL import Image
 
 CUB200_URL = 'https://drive.google.com/uc?id=1hbzc_P1FuxMkcabkgn9ZKinBwW683j45'  # Data taken from https://www.vision.caltech.edu/datasets/cub_200_2011/
@@ -42,8 +44,9 @@ def generate_cub200():
     original_path = unpack_dataset(dataset_archive_path)
     print('Generating parts locations...')
     part_names = pd.read_csv(f'{original_path}/CUB_200_2011/parts/parts.txt', header=None)[0].str.split(' ', n=1, expand=True).rename(columns={0: 'part_id', 1: 'part_name'}).astype({'part_id': int})
-    part_locs = pd.read_csv(f'{original_path}/CUB_200_2011/parts/part_locs.txt', header=None, names=['image_id', 'part_id', 'x', 'y', 'visible'], sep=' ').drop('visible', axis=1)
-    part_locs = part_locs.merge(part_names, on='part_id').drop('part_id', axis=1)
+    part_locs = pd.read_csv(f'{original_path}/CUB_200_2011/parts/part_locs.txt', header=None, names=['image_id', 'part_id', 'x', 'y', 'visible'], sep=' ')
+    part_locs = part_locs[part_locs.visible == 1].astype({'x': int, 'y': int})  # Remove parts that are not visible
+    part_locs = part_locs.merge(part_names, on='part_id').drop(['part_id', 'visible'], axis=1)
     part_locs.to_csv(f'{dataset_path}/part_locs.csv', index=False)
     print('Cropping images...')
     img_count = 0
@@ -70,6 +73,17 @@ def generate_cub200():
             cropped.save(f'{out_path}/{id1}.jpg')
 
 
+def _get_img_part_loc(filepath):
+    """Get part location centroid from a given binary mask."""
+    filename, _ = os.path.basename(filepath).split('.')
+    image_id, part_name = filename.split('_', maxsplit=1)
+    mask = cv2.imread(filepath, cv2.IMREAD_GRAYSCALE)
+    if np.any(mask > 0):
+        y, x = np.mean(np.nonzero(mask), axis=1).astype(int)  # Compute mask centroid
+    else:
+        y, x = np.nan, np.nan
+    return (int(image_id), x, y, part_name)
+
 def generate_celeb_a():
     """Generate celeb_a dataset."""
     print('Downloading dataset...')
@@ -78,13 +92,12 @@ def generate_celeb_a():
     print('Unpacking folder...')
     original_path = unpack_dataset(dataset_archive_path)
     print('Generating parts locations...')
-    part_locs = []
-    for filepath in tqdm(glob.glob(f'{original_path}/CelebAMask-HQ//CelebAMask-HQ-mask-anno/*/*.png')):
-        filename, _ = os.path.basename(filepath).split('.')
-        image_id, part_name = filename.split('_', maxsplit=1)
-        mask = np.asarray(Image.open(filepath).convert('L'))
-        # TODO: comput x and y from mask
-        part_locs.append((image_id, x, y, part_name))
+    masks_filepaths = glob.glob(f'{original_path}/CelebAMask-HQ//CelebAMask-HQ-mask-anno/*/*.png')
+    with mp.Pool(mp.cpu_count()) as pool:
+        part_locs = list(tqdm(pool.imap_unordered(_get_img_part_loc, masks_filepaths), total=len(masks_filepaths)))
+    part_locs = pd.DataFrame(part_locs, columns=['image_id', 'x', 'y', 'part_name'])
+    part_locs = part_locs[~part_locs[['x', 'y']].isna().any(axis=1)].astype({'x': int, 'y': int})  # Remove parts with NaN location
+    part_locs.to_csv(f'{dataset_path}/part_locs.csv', index=False)
     print('Generating attributes subsplits...')
     attributes = pd.read_csv(f'{original_path}/CelebAMask-HQ/CelebAMask-HQ-attribute-anno.txt', skiprows=1, sep='\s+')
     attributes = (attributes == 1)  # Convert to boolean
