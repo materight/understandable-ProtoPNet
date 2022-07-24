@@ -4,6 +4,7 @@ import copy
 from tqdm import tqdm
 from argparse import Namespace
 import numpy as np
+import pandas as pd
 import cv2
 from PIL import Image
 import matplotlib.pyplot as plt
@@ -67,13 +68,18 @@ def run_analysis(args: Namespace):
 
     # Compute params
     img_path = os.path.abspath(args.img)  # ./datasets/celeb_a/gender/test/Male/1.jpg
-    img_class, img_name = re.split(r'\\|/', img_path)[-2:]
+    img_class, img_id = re.split(r'\\|/', img_path)[-2:]
+    img_id, _ = os.path.splitext(img_id)
+    img_id = int(img_id)
+
+    dataset_split_path = os.path.dirname(os.path.dirname(img_path))
+    dataset_path = os.path.dirname(dataset_split_path)
 
     model_path = os.path.abspath(args.model)  # ./saved_models/vgg19/003/checkpoints/10_18push0.7822.pth
     model_base_architecture, experiment_run, _, model_name = re.split(r'\\|/', model_path)[-4:]
     start_epoch_number = int(re.search(r'\d+', model_name).group(0))
 
-    save_analysis_path = os.path.join(args.out, model_base_architecture, experiment_run, model_name, 'local', img_class, img_name)
+    save_analysis_path = os.path.join(args.out, model_base_architecture, experiment_run, model_name, 'local', img_class, str(img_id))
     makedir(save_analysis_path)
     log, logclose = create_logger(log_filename=os.path.join(save_analysis_path, 'local_analysis.log'))
 
@@ -86,11 +92,19 @@ def run_analysis(args: Namespace):
     ppnet = ppnet.cuda()
     ppnet_multi = torch.nn.DataParallel(ppnet)
 
+    img_pil = Image.open(args.img)
     img_size = ppnet_multi.module.img_size
     prototype_shape = ppnet.prototype_shape
     max_dist = prototype_shape[1] * prototype_shape[2] * prototype_shape[3]
     normalize = transforms.Normalize(mean=mean, std=std)
-    dataset = datasets.ImageFolder(os.path.join(os.path.dirname(img_path), '..'))
+    dataset = datasets.ImageFolder(dataset_split_path)
+
+    # Load part annotations
+    part_locs = pd.read_csv(os.path.join(dataset_path, 'part_locs.csv'))
+    part_locs = part_locs[part_locs.image_id == img_id].drop('image_id', axis=1).set_index('part_name').copy()
+    part_locs['x'] = (part_locs['x'] * (img_size / img_pil.width)).astype(int)  # Rescale part locations to match input size
+    part_locs['y'] = (part_locs['y'] * (img_size / img_pil.height)).astype(int)
+    assert np.all(part_locs[['x', 'y']] <= img_size), 'Part locations are outside of image boundaries'
 
     # SANITY CHECK
     # confirm prototype class identity
@@ -114,8 +128,6 @@ def run_analysis(args: Namespace):
         transforms.ToTensor(),
         normalize
     ])
-
-    img_pil = Image.open(args.img)
     img_tensor = preprocess(img_pil)
     img_variable = Variable(img_tensor.unsqueeze(0))
 
@@ -145,7 +157,9 @@ def run_analysis(args: Namespace):
     array_act, sorted_indices_act = torch.sort(prototype_activations[idx])
     out_dir = os.path.join(save_analysis_path, 'most_activated_prototypes')
     makedir(out_dir)
-    for i in tqdm(range(1, args.top_prototypes + 1), desc='Computing most activated prototypes'):    
+    top_prototypes = min(args.top_prototypes, ppnet.num_prototypes)
+    alignment_matrix = pd.DataFrame(index=reversed(sorted_indices_act[-top_prototypes:]).cpu().numpy(), columns=part_locs.index)
+    for i in tqdm(range(1, top_prototypes + 1), desc='Computing most activated prototypes'):
         save_prototype(load_img_dir, os.path.join(out_dir,  f'top-{i}_prototype_patch.png'), start_epoch_number, sorted_indices_act[-i].item())
         save_prototype_original_img_with_bbox(
             load_img_dir=load_img_dir,
@@ -168,9 +182,9 @@ def run_analysis(args: Namespace):
             f.write('last layer connection with predicted class: {0:.4f}\n'.format(ppnet.last_layer.weight[predicted_cls][sorted_indices_act[-i].item()]))
         activation_pattern = prototype_activation_patterns[idx][sorted_indices_act[-i].item()].detach().cpu().numpy()
         upsampled_activation_pattern = cv2.resize(activation_pattern, dsize=(img_size, img_size), interpolation=cv2.INTER_CUBIC)
-
-        # show the most highly activated patch of the image by this prototype
+        # Show the most highly activated patch of the image by this prototype
         high_act_patch_indices = find_high_activation_crop(upsampled_activation_pattern)
+        high_act_y, high_act_x = np.mean(high_act_patch_indices[0:2], dtype=int), np.mean(high_act_patch_indices[2:4], dtype=int)
         high_act_patch = original_img[high_act_patch_indices[0]:high_act_patch_indices[1], high_act_patch_indices[2]:high_act_patch_indices[3], :]
         plt.axis('off')
         plt.imsave(os.path.join(out_dir, f'top-{i}_target_patch.png'), high_act_patch)
@@ -180,7 +194,7 @@ def run_analysis(args: Namespace):
                          bbox_height_end=high_act_patch_indices[1],
                          bbox_width_start=high_act_patch_indices[2],
                          bbox_width_end=high_act_patch_indices[3], color=(0, 255, 255))
-        # show the image overlayed with prototype activation map
+        # Show the image overlayed with prototype activation map
         rescaled_activation_pattern = upsampled_activation_pattern - np.amin(upsampled_activation_pattern)
         rescaled_activation_pattern = rescaled_activation_pattern / np.amax(rescaled_activation_pattern)
         heatmap = cv2.applyColorMap(np.uint8(255*rescaled_activation_pattern), cv2.COLORMAP_JET)
@@ -189,7 +203,10 @@ def run_analysis(args: Namespace):
         overlayed_img = 0.5 * original_img + 0.3 * heatmap
         plt.axis('off')
         plt.imsave(os.path.join(out_dir, f'top-{i}_target_activations.png'), overlayed_img)
-
+        # Compute alignment matrix
+        dist = ((part_locs['x'] - high_act_x) ** 2 + (part_locs['y'] - high_act_y) ** 2) **.5
+        alignment_matrix.loc[sorted_indices_act[-i].item(), :] = dist
+    # TODO: save alignment matrix plot
     # PROTOTYPES FROM TOP-k CLASSES
     k = args.top_classes
     assert k < len(dataset.classes), 'k must be less than the number of available classes'

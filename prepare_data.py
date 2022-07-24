@@ -45,8 +45,13 @@ def generate_cub200():
     print('Generating parts locations...')
     part_names = pd.read_csv(f'{original_path}/CUB_200_2011/parts/parts.txt', header=None)[0].str.split(' ', n=1, expand=True).rename(columns={0: 'part_id', 1: 'part_name'}).astype({'part_id': int})
     part_locs = pd.read_csv(f'{original_path}/CUB_200_2011/parts/part_locs.txt', header=None, names=['image_id', 'part_id', 'x', 'y', 'visible'], sep=' ')
-    part_locs = part_locs[part_locs.visible == 1].astype({'x': int, 'y': int})  # Remove parts that are not visible
+    bboxes = pd.read_csv(f'{original_path}/CUB_200_2011/bounding_boxes.txt', header=None, sep=' ', names=['image_id', 'bb_x', 'bb_y', 'bb_w', 'bb_h'])
+    part_locs = part_locs[part_locs.visible == 1]  # Remove parts that are not visible
     part_locs = part_locs.merge(part_names, on='part_id').drop(['part_id', 'visible'], axis=1)
+    part_locs = part_locs.merge(bboxes, on='image_id')
+    part_locs['x'] -= part_locs['bb_x']  # Adjust x and y coordinates to be relative to the cropped bounding box
+    part_locs['y'] -= part_locs['bb_y']
+    part_locs = part_locs.drop(['bb_x', 'bb_y', 'bb_w', 'bb_h'], axis=1).astype({'x': int, 'y': int})
     part_locs.to_csv(f'{dataset_path}/part_locs.csv', index=False)
     print('Cropping images...')
     img_count = 0
