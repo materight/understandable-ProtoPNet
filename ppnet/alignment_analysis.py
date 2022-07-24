@@ -1,66 +1,17 @@
 import os
 import re
-import copy
-from tqdm import tqdm
 from argparse import Namespace
 import numpy as np
-import cv2
-from PIL import Image
-import matplotlib.pyplot as plt
 import torch
-import torch.utils.data
 from torch.autograd import Variable
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
+from PIL import Image
 
-from .helpers import makedir, find_high_activation_crop
+from .helpers import makedir
 from .log import create_logger
-from .preprocess import mean, std, undo_preprocess_input_function
-
-
-def save_preprocessed_img(fname, preprocessed_imgs, index=0):
-    img_copy = copy.deepcopy(preprocessed_imgs[index:index+1])
-    undo_preprocessed_img = undo_preprocess_input_function(img_copy)
-    undo_preprocessed_img = undo_preprocessed_img[0]
-    undo_preprocessed_img = undo_preprocessed_img.detach().cpu().numpy()
-    undo_preprocessed_img = np.transpose(undo_preprocessed_img, [1, 2, 0])
-    plt.imsave(fname, undo_preprocessed_img)
-    return undo_preprocessed_img
-
-
-def save_prototype(load_img_dir, fname, epoch, index):
-    p_img = plt.imread(os.path.join(load_img_dir, 'epoch-'+str(epoch), str(index), 'prototype-img.png'))
-    plt.axis('off')
-    plt.imsave(fname, p_img)
-
-
-def save_prototype_self_activation(load_img_dir, fname, epoch, index):
-    p_img = plt.imread(os.path.join(load_img_dir, 'epoch-'+str(epoch), str(index), 'prototype-img-original_with_self_act.png'))
-    plt.axis('off')
-    plt.imsave(fname, p_img)
-
-
-def save_prototype_original_img_with_bbox(load_img_dir, fname, epoch, index,
-                                          bbox_height_start, bbox_height_end,
-                                          bbox_width_start, bbox_width_end, color=(0, 255, 255)):
-    p_img_bgr = cv2.imread(os.path.join(load_img_dir, 'epoch-'+str(epoch), str(index), 'prototype-img-original.png'))
-    cv2.rectangle(p_img_bgr, (bbox_width_start, bbox_height_start), (bbox_width_end-1, bbox_height_end-1), color, thickness=2)
-    p_img_rgb = p_img_bgr[..., ::-1]
-    p_img_rgb = np.float32(p_img_rgb) / 255
-    # plt.imshow(p_img_rgb)
-    plt.imsave(fname, p_img_rgb)
-
-
-def imsave_with_bbox(fname, img_rgb, bbox_height_start, bbox_height_end,
-                     bbox_width_start, bbox_width_end, color=(0, 255, 255)):
-    img_bgr_uint8 = cv2.cvtColor(np.uint8(255*img_rgb), cv2.COLOR_RGB2BGR)
-    cv2.rectangle(img_bgr_uint8, (bbox_width_start, bbox_height_start), (bbox_width_end-1, bbox_height_end-1), color, thickness=2)
-    img_rgb_uint8 = img_bgr_uint8[..., ::-1]
-    img_rgb_float = np.float32(img_rgb_uint8) / 255
-    plt.axis('off')
-    plt.imsave(fname, img_rgb_float)
-
-
+from .preprocess import mean, std
+from .local_analysis import save_preprocessed_img
 
 def run_analysis(args: Namespace):
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpus
@@ -73,7 +24,7 @@ def run_analysis(args: Namespace):
     model_base_architecture, experiment_run, _, model_name = re.split(r'\\|/', model_path)[-4:]
     start_epoch_number = int(re.search(r'\d+', model_name).group(0))
 
-    save_analysis_path = os.path.join(args.out, model_base_architecture, experiment_run, model_name, 'local', img_class, img_name)
+    save_analysis_path = os.path.join(args.out, model_base_architecture, experiment_run, model_name, 'alignment', img_class, img_name)
     makedir(save_analysis_path)
     log, logclose = create_logger(log_filename=os.path.join(save_analysis_path, 'local_analysis.log'))
 
@@ -96,7 +47,7 @@ def run_analysis(args: Namespace):
     # confirm prototype class identity
     load_img_dir = os.path.join(os.path.dirname(args.model), '..', 'img')
     assert os.path.exists(load_img_dir), f'Folder "{load_img_dir}" does not exist'
-    prototype_info = np.load(os.path.join(load_img_dir, f'epoch-{start_epoch_number}', 'bb.npy'))
+    prototype_info = np.load(os.path.join(load_img_dir, f'epoch-{start_epoch_number}', 'bb.npy'))  # For each prototype: (prototype_original_image_id, height_start, height_end, width_start, width_end, prototype_class)
     prototype_img_identity = prototype_info[:, -1]
     log('Prototypes are chosen from ' + str(len(set(prototype_img_identity))) + ' classes')
 
@@ -143,13 +94,13 @@ def run_analysis(args: Namespace):
 
     # MOST ACTIVATED (NEAREST) 10 PROTOTYPES OF THIS IMAGE
     array_act, sorted_indices_act = torch.sort(prototype_activations[idx])
-    out_dir = os.path.join(save_analysis_path, 'most_activated_prototypes')
-    makedir(out_dir)
-    for i in tqdm(range(1, args.top_prototypes + 1), desc='Computing most activated prototypes'):    
-        save_prototype(load_img_dir, os.path.join(out_dir,  f'top-{i}_prototype_patch.png'), start_epoch_number, sorted_indices_act[-i].item())
+    for i in tqdm(range(1, args.top_prototypes + 1), desc='Computing most activated prototypes'):
+        out_dir = os.path.join(save_analysis_path, 'most_activated_prototypes', f'top-{i}')
+        makedir(out_dir)
+        save_prototype(load_img_dir, os.path.join(out_dir, 'prototype_patch.png'), start_epoch_number, sorted_indices_act[-i].item())
         save_prototype_original_img_with_bbox(
             load_img_dir=load_img_dir,
-            fname=os.path.join(out_dir, f'top-{i}_prototype_bbox.png'),
+            fname=os.path.join(out_dir, 'prototype_bbox.png'),
             epoch=start_epoch_number,
             index=sorted_indices_act[-i].item(),
             bbox_height_start=prototype_info[sorted_indices_act[-i].item()][1],
@@ -158,8 +109,8 @@ def run_analysis(args: Namespace):
             bbox_width_end=prototype_info[sorted_indices_act[-i].item()][4],
             color=(0, 255, 255)
         )
-        save_prototype_self_activation(load_img_dir, os.path.join(out_dir, f'top-{i}_prototype_activation.png'), start_epoch_number, sorted_indices_act[-i].item())
-        with open(os.path.join(out_dir, f'top-{i}_info.txt'), 'w') as f:
+        save_prototype_self_activation(load_img_dir, os.path.join(out_dir, 'prototype_activation.png'), start_epoch_number, sorted_indices_act[-i].item())
+        with open(os.path.join(out_dir, 'info.txt'), 'w') as f:
             f.write('prototype index: {0}\n'.format(sorted_indices_act[-i].item()))
             f.write('prototype class: {0}\n'.format(prototype_img_identity[sorted_indices_act[-i].item()]))
             if prototype_max_connection[sorted_indices_act[-i].item()] != prototype_img_identity[sorted_indices_act[-i].item()]:
@@ -173,8 +124,8 @@ def run_analysis(args: Namespace):
         high_act_patch_indices = find_high_activation_crop(upsampled_activation_pattern)
         high_act_patch = original_img[high_act_patch_indices[0]:high_act_patch_indices[1], high_act_patch_indices[2]:high_act_patch_indices[3], :]
         plt.axis('off')
-        plt.imsave(os.path.join(out_dir, f'top-{i}_target_patch.png'), high_act_patch)
-        imsave_with_bbox(fname=os.path.join(out_dir, f'top-{i}_target_bbox.png'),
+        plt.imsave(os.path.join(out_dir, 'target_patch.png'), high_act_patch)
+        imsave_with_bbox(fname=os.path.join(out_dir, 'target_bbox.png'),
                          img_rgb=original_img,
                          bbox_height_start=high_act_patch_indices[0],
                          bbox_height_end=high_act_patch_indices[1],
@@ -188,7 +139,7 @@ def run_analysis(args: Namespace):
         heatmap = heatmap[..., ::-1]
         overlayed_img = 0.5 * original_img + 0.3 * heatmap
         plt.axis('off')
-        plt.imsave(os.path.join(out_dir, f'top-{i}_target_activations.png'), overlayed_img)
+        plt.imsave(os.path.join(out_dir, 'target_activations.png'), overlayed_img)
 
     # PROTOTYPES FROM TOP-k CLASSES
     k = args.top_classes
@@ -204,11 +155,13 @@ def run_analysis(args: Namespace):
         prototype_cnt = 1
         reversed_indices = list(reversed(sorted_indices_cls_act.detach().cpu().numpy()))
         for j in tqdm(reversed_indices, desc=f'Computing prototypes of top-{i+1} class'):
+            prototype_dir = os.path.join(class_dir, f'top-{prototype_cnt}_prototype')
+            makedir(prototype_dir)
             prototype_index = class_prototype_indices[j]
-            save_prototype(load_img_dir, os.path.join(class_dir, f'top-{prototype_cnt}_prototype_patch.png'), start_epoch_number, prototype_index)
+            save_prototype(load_img_dir, os.path.join(prototype_dir, 'prototype_patch.png'), start_epoch_number, prototype_index)
             save_prototype_original_img_with_bbox(
                 load_img_dir=load_img_dir,
-                fname=os.path.join(class_dir, f'top-{prototype_cnt}_prototype_bbox.png'),
+                fname=os.path.join(prototype_dir, 'prototype_bbox.png'),
                 epoch=start_epoch_number,
                 index=prototype_index,
                 bbox_height_start=prototype_info[prototype_index][1],
@@ -217,8 +170,8 @@ def run_analysis(args: Namespace):
                 bbox_width_end=prototype_info[prototype_index][4],
                 color=(0, 255, 255)
             )
-            save_prototype_self_activation(load_img_dir, os.path.join(class_dir, f'top-{prototype_cnt}_prototype_activation.png'), start_epoch_number, prototype_index)
-            with open(os.path.join(class_dir, f'top-{prototype_cnt}_info.txt'), 'w') as f:
+            save_prototype_self_activation(load_img_dir, os.path.join(prototype_dir, 'prototype_activation.png'), start_epoch_number, prototype_index)
+            with open(os.path.join(prototype_dir, 'info.txt'), 'w') as f:
                 f.write('prototype index: {0}\n'.format(prototype_index))
                 f.write('prototype class: {0}\n'.format(prototype_img_identity[prototype_index]))
                 f.write('prototype class logits: {0:.4f}\n'.format(topk_logits[i]))
@@ -234,8 +187,8 @@ def run_analysis(args: Namespace):
             high_act_patch_indices = find_high_activation_crop(upsampled_activation_pattern)
             high_act_patch = original_img[high_act_patch_indices[0]:high_act_patch_indices[1], high_act_patch_indices[2]:high_act_patch_indices[3], :]
             plt.axis('off')
-            plt.imsave(os.path.join(class_dir, f'top-{prototype_cnt}_target_patch.png'), high_act_patch)
-            imsave_with_bbox(fname=os.path.join(class_dir, f'top-{prototype_cnt}_target_bbox.png'),
+            plt.imsave(os.path.join(prototype_dir, 'target_patch.png'), high_act_patch)
+            imsave_with_bbox(fname=os.path.join(prototype_dir, 'target_bbox.png'),
                              img_rgb=original_img,
                              bbox_height_start=high_act_patch_indices[0],
                              bbox_height_end=high_act_patch_indices[1],
@@ -249,7 +202,7 @@ def run_analysis(args: Namespace):
             heatmap = heatmap[..., ::-1]
             overlayed_img = 0.5 * original_img + 0.3 * heatmap
             plt.axis('off')
-            plt.imsave(os.path.join(class_dir, f'top-{prototype_cnt}_target_activation.png'), overlayed_img)
+            plt.imsave(os.path.join(prototype_dir, 'target_activation.png'), overlayed_img)
             prototype_cnt += 1
 
     if predicted_cls == correct_cls:

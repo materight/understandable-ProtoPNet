@@ -8,9 +8,7 @@ parser = argparse.ArgumentParser(description='Prune the learned prototypes from 
 parser.add_argument('--model', type=str, required=True, help='path of the trained model')
 parser.add_argument('--dataset', type=str, required=True, help='path of the dataset used for training')
 
-parser.add_argument('--img_size', type=int, default=224, help='resize dimension for training images (default: %(default)s)')
 parser.add_argument('--batch_size', type=int, default=32, help='input batch size (default: %(default)s)')
-
 parser.add_argument('--prune_threshold', type=int, default=3, help='resize dimension for training images (default: %(default)s)')
 parser.add_argument('--k_nearest', type=int, default=6, help='number of patches to compare for each prototype (default: %(default)s)')
 
