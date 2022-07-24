@@ -194,11 +194,11 @@ def find_k_nearest_patches_to_prototypes(dataloader,  # pytorch dataloader (must
                                  bbox_width_end=high_act_patch_indices[3], color=(0, 255, 255))
 
             labels = np.array([patch.label for patch in heaps[j]])
-            np.save(os.path.join(dir_for_saving_images, 'class_id.npy'), labels)
+            np.save(os.path.join(dir_for_saving_images, 'prototype_class_id.npy'), labels)
 
     labels_all_prototype = np.array([[patch.label for patch in heaps[j]] for j in range(n_prototypes)])
 
     if full_save:
-        np.save(os.path.join(root_dir_for_saving_images, 'full_class_id.npy'), labels_all_prototype)
+        np.save(os.path.join(root_dir_for_saving_images, 'prototype_full_class_id.npy'), labels_all_prototype)
 
     return labels_all_prototype
