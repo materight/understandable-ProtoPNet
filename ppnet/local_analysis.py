@@ -1,4 +1,5 @@
 import os
+import shutil
 import re
 import copy
 from tqdm import tqdm
@@ -62,6 +63,20 @@ def imsave_with_bbox(fname, img_rgb, bbox_height_start, bbox_height_end,
     plt.imsave(fname, img_rgb_float)
 
 
+def save_alignment_matrix(fname, alignment_matrix):
+    fig, ax = plt.subplots()
+    ax.imshow(-alignment_matrix.astype(float))
+    ax.set_yticks(range(len(alignment_matrix.index)))
+    ax.set_yticklabels(alignment_matrix.index)
+    ax.set_xticks(range(len(alignment_matrix.columns)))
+    ax.set_xticklabels(alignment_matrix.columns)
+    for i in range(len(alignment_matrix.index)):
+        for j in range(len(alignment_matrix.columns)):
+            ax.text(j, i, int(alignment_matrix.iloc[i, j]), ha='center', va='center', color='w', size='small')
+    plt.setp(ax.get_xticklabels(), rotation=45, ha='right', rotation_mode='anchor')
+    fig.tight_layout()
+    fig.savefig(fname)
+
 
 def run_analysis(args: Namespace):
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpus
@@ -80,6 +95,8 @@ def run_analysis(args: Namespace):
     start_epoch_number = int(re.search(r'\d+', model_name).group(0))
 
     save_analysis_path = os.path.join(args.out, model_base_architecture, experiment_run, model_name, 'local', img_class, str(img_id))
+    if os.path.exists(save_analysis_path):
+        shutil.rmtree(save_analysis_path)
     makedir(save_analysis_path)
     log, logclose = create_logger(log_filename=os.path.join(save_analysis_path, 'local_analysis.log'))
 
@@ -206,6 +223,8 @@ def run_analysis(args: Namespace):
         # Compute alignment matrix
         dist = ((part_locs['x'] - high_act_x) ** 2 + (part_locs['y'] - high_act_y) ** 2) **.5
         alignment_matrix.loc[sorted_indices_act[-i].item(), :] = dist
+    # Plot alignment matrix
+    save_alignment_matrix(os.path.join(out_dir, f'top-prototypes_alignment_matrix.png'), alignment_matrix)
     # TODO: save alignment matrix plot
     # PROTOTYPES FROM TOP-k CLASSES
     k = args.top_classes
