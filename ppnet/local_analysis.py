@@ -1,6 +1,8 @@
 import os
+import glob
 import shutil
 import re
+import random
 import copy
 from tqdm import tqdm
 from argparse import Namespace
@@ -80,7 +82,19 @@ def save_alignment_matrix(fname, alignment_matrix):
 
 def run_analysis(args: Namespace):
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpus
+    if not os.path.isdir(args.img):
+        # Run analysis on a single image
+        _run_analysis_on_image(args)
+    else:
+        # Run analysis on multiple images
+        img_filepaths = [f for ext in ['png', 'jpg', 'jpeg'] for f in glob.glob(os.path.join(args.img, f'**/*.{ext}'), recursive=True)]
+        img_filepaths = random.sample(img_filepaths, int(len(img_filepaths) * 0.1)) # Evaluate 10% of the images
+        for idx, img in enumerate(img_filepaths):
+            print(f'\n\n----------------------------\n[{idx+1}/{len(img_filepaths)}] Evaluating {img}')
+            args.img = img
+            _run_analysis_on_image(args)
 
+def _run_analysis_on_image(args: Namespace):
     # Compute params
     img_path = os.path.abspath(args.img)  # ./datasets/celeb_a/gender/test/Male/1.jpg
     img_class, img_id = re.split(r'\\|/', img_path)[-2:]
