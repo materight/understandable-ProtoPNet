@@ -225,10 +225,8 @@ def run_analysis(args: Namespace):
         alignment_matrix.loc[sorted_indices_act[-i].item(), :] = dist
     # Plot alignment matrix
     save_alignment_matrix(os.path.join(out_dir, f'top-prototypes_alignment_matrix.png'), alignment_matrix)
-    # TODO: save alignment matrix plot
     # PROTOTYPES FROM TOP-k CLASSES
-    k = args.top_classes
-    assert k < len(dataset.classes), 'k must be less than the number of available classes'
+    k = min(args.top_classes, len(dataset.classes))
     log('Prototypes from top-%d classes:' % k)
     topk_logits, topk_classes = torch.topk(logits[idx], k=k)
     for i, c in enumerate(topk_classes.detach().cpu().numpy()):
@@ -239,6 +237,7 @@ def run_analysis(args: Namespace):
         _, sorted_indices_cls_act = torch.sort(class_prototype_activations)
         prototype_cnt = 1
         reversed_indices = list(reversed(sorted_indices_cls_act.detach().cpu().numpy()))
+        alignment_matrix = pd.DataFrame(index=class_prototype_indices[reversed_indices], columns=part_locs.index)
         for j in tqdm(reversed_indices, desc=f'Computing prototypes of top-{i+1} class'):
             prototype_index = class_prototype_indices[j]
             save_prototype(load_img_dir, os.path.join(class_dir, f'top-{prototype_cnt}_prototype_patch.png'), start_epoch_number, prototype_index)
@@ -262,12 +261,11 @@ def run_analysis(args: Namespace):
                     f.write('prototype connection: {0}\n'.format(prototype_max_connection[prototype_index]))
                 f.write('activation value (similarity score): {0:.4f}\n'.format(prototype_activations[idx][prototype_index]))
                 f.write('last layer connection: {0:.4f}\n'.format(ppnet.last_layer.weight[c][prototype_index]))
-
             activation_pattern = prototype_activation_patterns[idx][prototype_index].detach().cpu().numpy()
             upsampled_activation_pattern = cv2.resize(activation_pattern, dsize=(img_size, img_size), interpolation=cv2.INTER_CUBIC)
-
-            # show the most highly activated patch of the image by this prototype
+            # Show the most highly activated patch of the image by this prototype
             high_act_patch_indices = find_high_activation_crop(upsampled_activation_pattern)
+            high_act_y, high_act_x = np.mean(high_act_patch_indices[0:2], dtype=int), np.mean(high_act_patch_indices[2:4], dtype=int)
             high_act_patch = original_img[high_act_patch_indices[0]:high_act_patch_indices[1], high_act_patch_indices[2]:high_act_patch_indices[3], :]
             plt.axis('off')
             plt.imsave(os.path.join(class_dir, f'top-{prototype_cnt}_target_patch.png'), high_act_patch)
@@ -277,7 +275,7 @@ def run_analysis(args: Namespace):
                              bbox_height_end=high_act_patch_indices[1],
                              bbox_width_start=high_act_patch_indices[2],
                              bbox_width_end=high_act_patch_indices[3], color=(0, 255, 255))
-            # show the image overlayed with prototype activation map
+            # Show the image overlayed with prototype activation map
             rescaled_activation_pattern = upsampled_activation_pattern - np.amin(upsampled_activation_pattern)
             rescaled_activation_pattern = rescaled_activation_pattern / np.amax(rescaled_activation_pattern)
             heatmap = cv2.applyColorMap(np.uint8(255*rescaled_activation_pattern), cv2.COLORMAP_JET)
@@ -287,6 +285,11 @@ def run_analysis(args: Namespace):
             plt.axis('off')
             plt.imsave(os.path.join(class_dir, f'top-{prototype_cnt}_target_activation.png'), overlayed_img)
             prototype_cnt += 1
+            # Compute alignment matrix
+            dist = ((part_locs['x'] - high_act_x) ** 2 + (part_locs['y'] - high_act_y) ** 2) **.5
+            alignment_matrix.loc[prototype_index, :] = dist
+        # Plot alignment matrix
+        save_alignment_matrix(os.path.join(class_dir, f'top-prototypes_alignment_matrix.png'), alignment_matrix)
 
     if predicted_cls == correct_cls:
         log('Prediction is correct.')
