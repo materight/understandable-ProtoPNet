@@ -131,6 +131,7 @@ def generate_celeb_a():
         is_training = rng.choice([True, False], size=len(filtered_attributes), p=[1 - test_split_fraction, test_split_fraction])
         filtered_attributes['is_training'] = is_training
         # Create dataset subsplit as hard-links of original images to save space
+        os.link(f'{dataset_path}/part_locs.csv', f'{subsplit_path}/part_locs.csv')
         for sample in tqdm(filtered_attributes.itertuples(), desc=f'Generating "{subsplit_name}" subsplit', total=len(filtered_attributes)):
             sample_path = f'{subsplit_path}/{"train" if sample.is_training else "test"}/{sample.class_name}/{sample.Index}'
             if not os.path.exists(os.path.dirname(sample_path)):
