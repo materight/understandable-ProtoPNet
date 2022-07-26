@@ -101,8 +101,6 @@ def run_pruning(args: Namespace):
     train_dir = os.path.join(args.dataset, 'train')
     test_dir = os.path.join(args.dataset, 'test')
 
-    # pruning parameters
-    optimize_last_layer = True
     k = args.k_nearest
 
     model_path = os.path.abspath(args.model)
@@ -189,7 +187,7 @@ def run_pruning(args: Namespace):
                                 target_accu=0.70, log=log)
 
     # last layer optimization
-    if optimize_last_layer:
+    if args.n_iter > 0:
         last_layer_optimizer_specs = [{'params': ppnet.last_layer.parameters(), 'lr': 1e-4}]
         last_layer_optimizer = torch.optim.Adam(last_layer_optimizer_specs)
 
@@ -202,7 +200,7 @@ def run_pruning(args: Namespace):
 
         log('optimize last layer')
         tnt.last_only(model=ppnet_multi, log=log)
-        for i in range(100):
+        for i in range(args.n_iter):
             log('iteration: \t{0}'.format(i))
             _ = tnt.train(model=ppnet_multi, dataloader=train_loader, optimizer=last_layer_optimizer,
                         class_specific=class_specific, coefs=coefs, log=log)
