@@ -87,7 +87,7 @@ def run_analysis(args: Namespace):
         _run_analysis_on_image(args)
     else:
         # Run analysis on multiple images
-        img_filepaths = [f for ext in ['png', 'jpg', 'jpeg'] for f in glob.glob(os.path.join(args.img, f'**/*.{ext}'), recursive=True)]
+        img_filepaths = [f for ext in ['png', 'jpg', 'jpeg'] for f in glob.glob(os.path.join(args.img, f'*/*.{ext}'), recursive=True)]
         img_filepaths = random.sample(img_filepaths, min(len(img_filepaths), 100)) # Evaluate 10% of the images
         for idx, img in enumerate(img_filepaths):
             print(f'\n\n----------------------------\n[{idx+1}/{len(img_filepaths)}] Evaluating {img}')
@@ -117,7 +117,8 @@ def _run_analysis_on_image(args: Namespace):
     log(f'\nLoad model from: {args.model}')
     log(f'Model epoch: {start_epoch_number}')
     log(f'Model base architecture: {model_base_architecture}')
-    log(f'Experiment run: {experiment_run}\n')
+    log(f'Experiment run: {experiment_run}')
+    log(f'Output path: {os.path.abspath(save_analysis_path)}\n')
 
     ppnet = torch.load(args.model)
     ppnet = ppnet.cuda()
