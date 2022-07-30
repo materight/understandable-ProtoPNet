@@ -74,7 +74,7 @@ def run_analysis(args: Namespace):
         _run_analysis_on_image(args)
     else:
         # Run analysis on multiple images
-        random.seed(0)
+        random.seed(1)
         img_filepaths = [f for ext in ['png', 'jpg', 'jpeg'] for f in glob.glob(os.path.join(args.img, f'*/*.{ext}'), recursive=True)]
         # Group by class
         img_filepaths_by_class = defaultdict(list)

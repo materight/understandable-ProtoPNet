@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 
 def save_alignment_matrix(fname, alignment_matrix):
-    fig, ax = plt.subplots(figsize=(10, 10))
+    fig, ax = plt.subplots(figsize=(5, 5))
     ax.imshow(-alignment_matrix.astype(float))
     ax.set_yticks(range(len(alignment_matrix.index)))
     ax.set_yticklabels(alignment_matrix.index)
