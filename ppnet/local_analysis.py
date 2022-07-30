@@ -4,7 +4,7 @@ import shutil
 import re
 import random
 import copy
-from regex import F
+from collections import defaultdict
 from tqdm import tqdm
 from argparse import Namespace
 import numpy as np
@@ -74,13 +74,24 @@ def run_analysis(args: Namespace):
         _run_analysis_on_image(args)
     else:
         # Run analysis on multiple images
-        img_filepaths = [f for ext in ['png', 'jpg', 'jpeg'] for f in glob.glob(os.path.join(args.img, f'*/*.{ext}'), recursive=True)]
         random.seed(0)
-        img_filepaths = random.sample(img_filepaths, min(len(img_filepaths), 100)) # Evaluate 10% of the images
-        for idx, img in enumerate(img_filepaths):
-            print(f'\n\n----------------------------\n[{idx+1}/{len(img_filepaths)}] Evaluating {img}')
-            args.img = img
-            _run_analysis_on_image(args)
+        img_filepaths = [f for ext in ['png', 'jpg', 'jpeg'] for f in glob.glob(os.path.join(args.img, f'*/*.{ext}'), recursive=True)]
+        # Group by class
+        img_filepaths_by_class = defaultdict(list)
+        for f in img_filepaths:
+            class_name = os.path.basename(os.path.dirname(f))
+            img_filepaths_by_class[class_name].append(f)
+        # Randomly sample images
+        num_classes = len(img_filepaths_by_class)
+        num_evaluations = max(num_classes, 100)
+        idx = 0
+        for class_name, samples in img_filepaths_by_class.items():
+            imgs = random.sample(samples, num_evaluations // num_classes)
+            for img in imgs:
+                print(f'\n\n----------------------------\n[{idx+1}/{num_evaluations}] Evaluating {img}')
+                args.img = img
+                _run_analysis_on_image(args)
+                idx += 1
 
 def _run_analysis_on_image(args: Namespace):
     # Compute params
