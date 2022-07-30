@@ -75,6 +75,7 @@ def run_analysis(args: Namespace):
     else:
         # Run analysis on multiple images
         img_filepaths = [f for ext in ['png', 'jpg', 'jpeg'] for f in glob.glob(os.path.join(args.img, f'*/*.{ext}'), recursive=True)]
+        random.seed(0)
         img_filepaths = random.sample(img_filepaths, min(len(img_filepaths), 100)) # Evaluate 10% of the images
         for idx, img in enumerate(img_filepaths):
             print(f'\n\n----------------------------\n[{idx+1}/{len(img_filepaths)}] Evaluating {img}')
