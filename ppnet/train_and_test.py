@@ -9,11 +9,10 @@ import torchvision.transforms as T
 import torchvision.datasets as datasets
 
 
-from .helpers import set_seed, list_of_distances
+from .helpers import set_seed, pairwise_dist
 from . import model, push, save
 from .log import create_logger
 from .preprocess import mean, std, preprocess_input_function
-
 
 
 def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l1_mask=True,
@@ -32,6 +31,7 @@ def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l
     total_cluster_cost = 0
     # separation cost is meaningful only for class_specific
     total_separation_cost = 0
+    total_diversity_cost = 0
     total_avg_separation_cost = 0
 
     for i, (image, label) in enumerate(tqdm(dataloader)):
@@ -61,14 +61,21 @@ def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l
 
                 # calculate separation cost
                 prototypes_of_wrong_class = 1 - prototypes_of_correct_class
-                inverted_distances_to_nontarget_prototypes, _ = \
-                    torch.max((max_dist - min_distances) * prototypes_of_wrong_class, dim=1)
+                inverted_distances_to_nontarget_prototypes, _ = torch.max((max_dist - min_distances) * prototypes_of_wrong_class, dim=1)
                 separation_cost = torch.mean(max_dist - inverted_distances_to_nontarget_prototypes)
 
-                # calculate avg cluster cost
-                avg_separation_cost = \
-                    torch.sum(min_distances * prototypes_of_wrong_class, dim=1) / torch.sum(prototypes_of_wrong_class, dim=1)
-                avg_separation_cost = torch.mean(avg_separation_cost)
+                # calculate prototypes diversity cost
+                prototypes = model.module.prototype_vectors.squeeze()
+                assert prototypes.ndim == 2, 'prototype_vectors should be 2D'
+                min_prototypes_dist = 1.0
+                prototypes_pairwise_dist = pairwise_dist(model.module.prototype_vectors.squeeze(), squared=True)
+                prototypes_pairwise_dist = torch.clamp(min_prototypes_dist - prototypes_pairwise_dist, min=0)  # Kepp only distances lower than `min_prototypes_dist`
+                diversity_cost = torch.sum(prototypes_pairwise_dist[~torch.eye(prototypes.shape[0], dtype=bool)])  # Remove diagonal values and sum up the remaining distances
+                diversity_cost = diversity_cost / 2  # Divide by 2 because each distance is counted twice
+
+                # calculate avg sepration cost
+                avg_separation_cost = torch.sum(min_distances * prototypes_of_wrong_class, dim=1) / torch.sum(prototypes_of_wrong_class, dim=1)
+                avg_separation_cost = torch.mean(avg_separation_cost)         
 
                 if use_l1_mask:
                     l1_mask = 1 - torch.t(model.module.prototype_class_identity).cuda()
@@ -90,6 +97,7 @@ def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l
             total_cross_entropy += cross_entropy.item()
             total_cluster_cost += cluster_cost.item()
             total_separation_cost += separation_cost.item()
+            total_diversity_cost += diversity_cost.item()
             total_avg_separation_cost += avg_separation_cost.item()
 
         # compute gradient and do SGD step
@@ -99,6 +107,7 @@ def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l
                     loss = (coefs['crs_ent'] * cross_entropy
                             + coefs['clst'] * cluster_cost
                             + coefs['sep'] * separation_cost
+                            + coefs['diversity'] * diversity_cost
                             + coefs['l1'] * l1)
                 else:
                     loss = cross_entropy + 0.8 * cluster_cost - 0.08 * separation_cost + 1e-4 * l1
@@ -126,13 +135,14 @@ def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l
     log('\tcluster: \t{0:.5f}'.format(total_cluster_cost / n_batches))
     if class_specific:
         log('\tseparation:\t{0:.5f}'.format(total_separation_cost / n_batches))
+        log('\tdiversity:\t{0:.5f}'.format(total_diversity_cost / n_batches))
         log('\tavg separation:\t{0:.5f}'.format(total_avg_separation_cost / n_batches))
     log('\taccu: \t\t{0:.5f}%'.format(n_correct / n_examples * 100))
     log('\tl1: \t\t{0:.2f}'.format(model.module.last_layer.weight.norm(p=1).item()))
     p = model.module.prototype_vectors.view(model.module.num_prototypes, -1).cpu()
     with torch.no_grad():
-        p_avg_pair_dist = torch.mean(list_of_distances(p, p))
-    log('\tp dist pair: \t{0:.5f}'.format(p_avg_pair_dist.item()))
+        p_avg_pair_dist = torch.mean(pairwise_dist(p, squared=True))
+    log('\tavg proto dist: \t{0:.5f}'.format(p_avg_pair_dist.item()))
 
     return n_correct / n_examples
 
@@ -208,6 +218,7 @@ def run_training(args: Namespace):
         crs_ent=1,
         clst=0.8,
         sep=-0.08,
+        diversity=args.diversity_coeff,
         l1=1e-4,
     )
 

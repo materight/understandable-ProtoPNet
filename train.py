@@ -21,10 +21,11 @@ parser.add_argument('--push_interval', type=int, default=300, help='epoch interv
 
 parser.add_argument('--prototype_activation_function', type=str, default='log', choices=['log', 'linear'], help='activation function for the last prototype (default: %(default)s)')
 parser.add_argument('--add_on_layers', type=str, default='regular', choices=['regular', 'bottleneck'], help='add-on layers type (default: %(default)s)')
+parser.add_argument('--diversity_coeff', type=float, default=0, help='coefficient for intra-class diversity regularization (default: %(default)s, i.e. disabled)')
 
 parser.add_argument('--gpus', type=str, default='0', help='list of gpus to use, e.g. 0,1,2 (default: %(default)s)')
 parser.add_argument('--num_workers', type=int, default=0, help='number of workers to use for data loading (default: %(default)s)')
-parser.add_argument('--seed', type=int, default=0, help='random seed to use (default: %(default)s)')
+parser.add_argument('--seed', type=int, default=None, help='random seed to use (default: %(default)s)')
 
 
 if __name__ == '__main__':

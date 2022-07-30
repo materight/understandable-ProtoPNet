@@ -4,8 +4,18 @@ import random
 import numpy as np
 
 
-def list_of_distances(X, Y):
-    return torch.sum((torch.unsqueeze(X, dim=2) - torch.unsqueeze(Y.t(), dim=0)) ** 2, dim=1)
+def pairwise_dist(embeddings, squared=False):
+    """Compute pairwise distances betweeen embeddings efficently."""
+    dot_prod = embeddings.mm(embeddings.T)
+    square_norm = dot_prod.diag()
+    dist = square_norm.unsqueeze(0) - 2*dot_prod + square_norm.unsqueeze(1) # Squared pairwise distances
+    dist = dist.clamp(min=0) # Some values might be negative due to numerical instability. Set distances to >=0
+    if not squared:  # Compute sqrt of distances
+        mask = (dist == 0).float() # 1 in the positions where dist==0, otherwise 0
+        dist = dist + 1e-16 * mask  # Because the gradient of sqrt is infinite when dist==0, add a small epsilon where dist==0
+        dist = torch.sqrt(dist)
+        dist = dist * (1 - mask) # Correct the epsilon added: set the distances on the mask to be 0
+    return dist
 
 
 def make_one_hot(target, target_one_hot):
@@ -52,6 +62,7 @@ def find_high_activation_crop(activation_map, percentile=95):
 
 
 def set_seed(seed):
-    torch.manual_seed(seed)
-    np.random.seed(seed)
-    random.seed(seed)
+    if seed is not None:
+        torch.manual_seed(seed)
+        np.random.seed(seed)
+        random.seed(seed)
