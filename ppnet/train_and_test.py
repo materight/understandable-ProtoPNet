@@ -142,7 +142,7 @@ def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l
     p = model.module.prototype_vectors.view(model.module.num_prototypes, -1).cpu()
     with torch.no_grad():
         p_avg_pair_dist = torch.mean(pairwise_dist(p, squared=True))
-    log('\tavg proto dist: \t{0:.5f}'.format(p_avg_pair_dist.item()))
+    log('\tavg proto dist:\t{0:.5f}'.format(p_avg_pair_dist.item()))
 
     return n_correct / n_examples
 
