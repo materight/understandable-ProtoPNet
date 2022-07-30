@@ -115,7 +115,7 @@ def run_analysis(args: Namespace):
     find_k_nearest_patches_to_prototypes(
         dataloader=train_loader,  # pytorch dataloader (must be unnormalized in [0,1])
         prototype_network_parallel=ppnet_multi,  # pytorch network with prototype_vectors
-        k=args.top_patches + 1,
+        k=args.top_imgs + 1,
         preprocess_input_function=preprocess_input_function,  # normalize if needed
         full_save=True,
         root_dir_for_saving_images=root_dir_for_saving_train_images,
@@ -124,7 +124,7 @@ def run_analysis(args: Namespace):
     find_k_nearest_patches_to_prototypes(
         dataloader=test_loader,  # pytorch dataloader (must be unnormalized in [0,1])
         prototype_network_parallel=ppnet_multi,  # pytorch network with prototype_vectors
-        k=args.top_patches,
+        k=args.top_imgs,
         preprocess_input_function=preprocess_input_function,  # normalize if needed
         full_save=True,
         root_dir_for_saving_images=root_dir_for_saving_test_images,
