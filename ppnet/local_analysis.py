@@ -4,6 +4,7 @@ import shutil
 import re
 import random
 import copy
+from regex import F
 from tqdm import tqdm
 from argparse import Namespace
 import numpy as np
@@ -20,6 +21,7 @@ import torchvision.datasets as datasets
 from .helpers import makedir, find_high_activation_crop
 from .log import create_logger
 from .preprocess import mean, std, undo_preprocess_input_function
+from .alignment_score import alignment_score, save_alignment_matrix
 
 
 def save_preprocessed_img(fname, preprocessed_imgs, index=0):
@@ -65,21 +67,6 @@ def imsave_with_bbox(fname, img_rgb, bbox_height_start, bbox_height_end,
     plt.imsave(fname, img_rgb_float)
 
 
-def save_alignment_matrix(fname, alignment_matrix):
-    fig, ax = plt.subplots()
-    ax.imshow(-alignment_matrix.astype(float))
-    ax.set_yticks(range(len(alignment_matrix.index)))
-    ax.set_yticklabels(alignment_matrix.index)
-    ax.set_xticks(range(len(alignment_matrix.columns)))
-    ax.set_xticklabels(alignment_matrix.columns)
-    for i in range(len(alignment_matrix.index)):
-        for j in range(len(alignment_matrix.columns)):
-            ax.text(j, i, int(alignment_matrix.iloc[i, j]), ha='center', va='center', color='w', size='small')
-    plt.setp(ax.get_xticklabels(), rotation=45, ha='right', rotation_mode='anchor')
-    fig.tight_layout()
-    fig.savefig(fname)
-
-
 def run_analysis(args: Namespace):
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpus
     if not os.path.isdir(args.img):
@@ -106,6 +93,9 @@ def _run_analysis_on_image(args: Namespace):
 
     model_path = os.path.abspath(args.model)  # ./saved_models/vgg19/003/checkpoints/10_18push0.7822.pth
     model_base_architecture, experiment_run, _, model_name = re.split(r'\\|/', model_path)[-4:]
+    if model_base_architecture == 'pruned_prototypes':
+        model_base_architecture, experiment_run = re.split(r'\\|/', model_path)[-6:-4]
+        model_name = f'pruned_{model_name}'
     start_epoch_number = int(re.search(r'\d+', model_name).group(0))
 
     save_analysis_path = os.path.join(args.out, model_base_architecture, experiment_run, model_name, 'local', img_class, str(img_id))
@@ -216,7 +206,6 @@ def _run_analysis_on_image(args: Namespace):
         upsampled_activation_pattern = cv2.resize(activation_pattern, dsize=(img_size, img_size), interpolation=cv2.INTER_CUBIC)
         # Show the most highly activated patch of the image by this prototype
         high_act_patch_indices = find_high_activation_crop(upsampled_activation_pattern)
-        high_act_y, high_act_x = np.mean(high_act_patch_indices[0:2], dtype=int), np.mean(high_act_patch_indices[2:4], dtype=int)
         high_act_patch = original_img[high_act_patch_indices[0]:high_act_patch_indices[1], high_act_patch_indices[2]:high_act_patch_indices[3], :]
         plt.axis('off')
         plt.imsave(os.path.join(out_dir, f'top-{i}_target_patch.png'), high_act_patch)
@@ -236,8 +225,7 @@ def _run_analysis_on_image(args: Namespace):
         plt.axis('off')
         plt.imsave(os.path.join(out_dir, f'top-{i}_target_activations.png'), overlayed_img)
         # Compute alignment matrix
-        dist = ((part_locs['x'] - high_act_x) ** 2 + (part_locs['y'] - high_act_y) ** 2) **.5
-        alignment_matrix.loc[sorted_indices_act[-i].item(), :] = dist
+        alignment_matrix.loc[sorted_indices_act[-i].item(), :] = alignment_score(part_locs, high_act_patch_indices)
     # Plot alignment matrix
     save_alignment_matrix(os.path.join(out_dir, f'top-prototypes_alignment_matrix.png'), alignment_matrix)
     # PROTOTYPES FROM TOP-k CLASSES
@@ -280,7 +268,6 @@ def _run_analysis_on_image(args: Namespace):
             upsampled_activation_pattern = cv2.resize(activation_pattern, dsize=(img_size, img_size), interpolation=cv2.INTER_CUBIC)
             # Show the most highly activated patch of the image by this prototype
             high_act_patch_indices = find_high_activation_crop(upsampled_activation_pattern)
-            high_act_y, high_act_x = np.mean(high_act_patch_indices[0:2], dtype=int), np.mean(high_act_patch_indices[2:4], dtype=int)
             high_act_patch = original_img[high_act_patch_indices[0]:high_act_patch_indices[1], high_act_patch_indices[2]:high_act_patch_indices[3], :]
             plt.axis('off')
             plt.imsave(os.path.join(class_dir, f'top-{prototype_cnt}_target_patch.png'), high_act_patch)
@@ -301,8 +288,7 @@ def _run_analysis_on_image(args: Namespace):
             plt.imsave(os.path.join(class_dir, f'top-{prototype_cnt}_target_activation.png'), overlayed_img)
             prototype_cnt += 1
             # Compute alignment matrix
-            dist = ((part_locs['x'] - high_act_x) ** 2 + (part_locs['y'] - high_act_y) ** 2) **.5
-            alignment_matrix.loc[prototype_index, :] = dist
+            alignment_matrix.loc[prototype_index, :] = alignment_score(part_locs, high_act_patch_indices)
         # Plot alignment matrix
         save_alignment_matrix(os.path.join(class_dir, f'top-prototypes_alignment_matrix.png'), alignment_matrix)
 

@@ -35,6 +35,9 @@ def run_analysis(args: Namespace):
     model_path = os.path.abspath(args.model)  # ./saved_models/vgg19/003/checkpoints/10_18push0.7822.pth
     model_base_architecture, experiment_run, _, model_name = re.split(r'\\|/', model_path)[-4:]
     start_epoch_number = int(re.search(r'\d+', model_name).group(0))
+    if model_base_architecture == 'pruned_prototypes':
+        model_base_architecture, experiment_run = re.split(r'\\|/', model_path)[-6:-4]
+        model_name = f'pruned_{model_name}'
 
     # load the model
     save_analysis_path = os.path.join(args.out, model_base_architecture, experiment_run, model_name, 'global')
