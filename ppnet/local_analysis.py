@@ -98,9 +98,10 @@ def _run_analysis_on_image(args: Namespace):
         model_name = f'pruned_{model_name}'
     start_epoch_number = int(re.search(r'\d+', model_name).group(0))
 
-    save_analysis_path = os.path.join(args.out, model_base_architecture, experiment_run, model_name, 'local', img_class, str(img_id))
+    save_analysis_path = os.path.join(args.out, model_base_architecture, experiment_run, model_name, 'local')
     if os.path.exists(save_analysis_path):
         shutil.rmtree(save_analysis_path)
+    save_analysis_path = os.path.join(save_analysis_path, img_class, str(img_id))
     makedir(save_analysis_path)
     log, logclose = create_logger(log_filename=os.path.join(save_analysis_path, 'local_analysis.log'))
 
