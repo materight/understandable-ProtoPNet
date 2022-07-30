@@ -21,7 +21,7 @@ import torchvision.datasets as datasets
 from .helpers import makedir, find_high_activation_crop
 from .log import create_logger
 from .preprocess import mean, std, undo_preprocess_input_function
-from .alignment_score import alignment_score, save_alignment_matrix
+from .alignment_analysis import alignment_score, save_alignment_matrix
 
 
 def save_preprocessed_img(fname, preprocessed_imgs, index=0):

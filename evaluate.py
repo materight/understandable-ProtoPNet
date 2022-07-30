@@ -1,6 +1,6 @@
 import argparse
 
-from ppnet import global_analysis, local_analysis
+from ppnet import global_analysis, local_analysis, alignment_analysis
 
 
 # General script arguments
@@ -14,7 +14,7 @@ subparsers = parser.add_subparsers()
 
 # Global analysis arguments
 global_parser = subparsers.add_parser('global', help='run global analysis')
-global_parser.add_argument('--dataset', type=str, required=True, help='path of the dataset to use for training and evaluation')
+global_parser.add_argument('--dataset', type=str, required=True, help='path of the dataset to use for evaluation')
 global_parser.add_argument('--top_imgs', type=int, default=5, help='number of most activated images to be displayed for each prototype (default: %(default)s)')
 global_parser.set_defaults(func=global_analysis.run_analysis)
 
@@ -25,6 +25,12 @@ local_parser.add_argument('--img', type=str, required=True, help='path of an ima
 local_parser.add_argument('--top_prototypes', type=int, default=10, help='number of most activated prototypes to be displayed (default: %(default)s)')
 local_parser.add_argument('--top_classes', type=int, default=5, help='number of most activated classes for which display the top prototypes (default: %(default)s)')
 local_parser.set_defaults(func=local_analysis.run_analysis)
+
+
+# Alignment score arguments
+local_parser = subparsers.add_parser('alignment', help='run alignment analysis of prototypes')
+local_parser.add_argument('--dataset', type=str, required=True, help='path of the dataset to use for evaluation')
+local_parser.set_defaults(func=alignment_analysis.run_analysis)
 
 
 if __name__ == '__main__':
