@@ -65,13 +65,11 @@ def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l
                 separation_cost = torch.mean(max_dist - inverted_distances_to_nontarget_prototypes)
 
                 # calculate prototypes diversity cost
-                prototypes = model.module.prototype_vectors.squeeze()
-                assert prototypes.ndim == 2, 'prototype_vectors should be 2D'
-                min_prototypes_dist = 1.0
+                min_prototypes_dist = 0.1
                 prototypes_pairwise_dist = pairwise_dist(model.module.prototype_vectors.squeeze(), squared=True)
-                prototypes_pairwise_dist = torch.clamp(min_prototypes_dist - prototypes_pairwise_dist, min=0)  # Kepp only distances lower than `min_prototypes_dist`
-                diversity_cost = torch.sum(prototypes_pairwise_dist[~torch.eye(prototypes.shape[0], dtype=bool)])  # Remove diagonal values and sum up the remaining distances
-                diversity_cost = diversity_cost / 2  # Divide by 2 because each distance is counted twice
+                prototypes_pairwise_dist = torch.clamp(min_prototypes_dist - prototypes_pairwise_dist, min=0)  # Kepp only distances lower than `min_prototypes_dist
+                prototypes_pairwise_dist = prototypes_pairwise_dist * (1 - torch.eye(model.module.prototype_shape[0], device=prototypes_pairwise_dist.device))  # Remove diagonal values
+                diversity_cost = torch.sum(prototypes_pairwise_dist) / 2  # Sum up and divide by 2 because each distance is counted twice
 
                 # calculate avg sepration cost
                 avg_separation_cost = torch.sum(min_distances * prototypes_of_wrong_class, dim=1) / torch.sum(prototypes_of_wrong_class, dim=1)
