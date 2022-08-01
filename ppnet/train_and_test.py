@@ -65,7 +65,7 @@ def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l
                 separation_cost = torch.mean(max_dist - inverted_distances_to_nontarget_prototypes)
 
                 # calculate prototypes diversity cost
-                min_prototypes_dist = 0.1
+                min_prototypes_dist = 0.2
                 prototypes_pairwise_dist = pairwise_dist(model.module.prototype_vectors.squeeze(), squared=True)
                 prototypes_pairwise_dist = torch.clamp(min_prototypes_dist - prototypes_pairwise_dist, min=0)  # Kepp only distances lower than `min_prototypes_dist
                 prototypes_pairwise_dist = prototypes_pairwise_dist * (1 - torch.eye(model.module.prototype_shape[0], device=prototypes_pairwise_dist.device))  # Remove diagonal values
