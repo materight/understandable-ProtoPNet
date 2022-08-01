@@ -15,7 +15,7 @@ from .log import create_logger
 from .preprocess import mean, std, preprocess_input_function
 
 
-def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l1_mask=True,
+def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l1_mask=True, min_prototypes_dist=0.1,
                    coefs=None, log=print):
     '''
     model: the multi-gpu model
@@ -65,7 +65,6 @@ def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l
                 separation_cost = torch.mean(max_dist - inverted_distances_to_nontarget_prototypes)
 
                 # calculate prototypes diversity cost
-                min_prototypes_dist = 0.2
                 prototypes_pairwise_dist = pairwise_dist(model.module.prototype_vectors.squeeze(), squared=True)
                 prototypes_pairwise_dist = torch.clamp(min_prototypes_dist - prototypes_pairwise_dist, min=0)  # Kepp only distances lower than `min_prototypes_dist
                 prototypes_pairwise_dist = prototypes_pairwise_dist * (1 - torch.eye(model.module.prototype_shape[0], device=prototypes_pairwise_dist.device))  # Remove diagonal values
@@ -145,13 +144,13 @@ def _train_or_test(model, dataloader, optimizer=None, class_specific=True, use_l
     return n_correct / n_examples
 
 
-def train(model, dataloader, optimizer, class_specific=False, coefs=None, log=print):
+def train(model, dataloader, optimizer, class_specific=False, min_prototypes_dist=0.1, coefs=None, log=print):
     assert(optimizer is not None)
 
     log('train')
     model.train()
     return _train_or_test(model=model, dataloader=dataloader, optimizer=optimizer,
-                          class_specific=class_specific, coefs=coefs, log=log)
+                          class_specific=class_specific, min_prototypes_dist=min_prototypes_dist, coefs=coefs, log=log)
 
 
 def test(model, dataloader, class_specific=False, log=print):
@@ -330,11 +329,11 @@ def run_training(args: Namespace):
         if epoch < args.warm_epochs:
             warm_only(model=ppnet_multi, log=log)
             _ = train(model=ppnet_multi, dataloader=train_loader, optimizer=warm_optimizer,
-                          class_specific=class_specific, coefs=coefs, log=log)
+                      class_specific=class_specific, min_prototypes_dist=args.min_diversity, coefs=coefs, log=log)
         else:
             joint(model=ppnet_multi, log=log)
             _ = train(model=ppnet_multi, dataloader=train_loader, optimizer=joint_optimizer,
-                          class_specific=class_specific, coefs=coefs, log=log)
+                          class_specific=class_specific, min_prototypes_dist=args.min_diversity, coefs=coefs, log=log)
             joint_lr_scheduler.step()
 
         if epoch % args.test_interval == 0:
@@ -367,7 +366,7 @@ def run_training(args: Namespace):
                 for i in range(20):
                     log('iteration: \t{0}'.format(i))
                     _ = train(model=ppnet_multi, dataloader=train_loader, optimizer=last_layer_optimizer,
-                                  class_specific=class_specific, coefs=coefs, log=log)
+                                  class_specific=class_specific, min_prototypes_dist=args.min_diversity, coefs=coefs, log=log)
                     accu = test(model=ppnet_multi, dataloader=test_loader,
                                     class_specific=class_specific, log=log)
                     save.save_model_w_condition(model=ppnet, model_dir=model_dir, model_name=f'{epoch:03d}_{i:02d}push', accu=accu,
