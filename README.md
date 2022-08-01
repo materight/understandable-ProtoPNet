@@ -1,4 +1,4 @@
-# Understanding ProtoPNet
+# ProtoPNet: are learned concepts understandable?
 
 ## Get started
 - Clone the repository and install the required dependencies:
