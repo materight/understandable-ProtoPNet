@@ -7,7 +7,9 @@ import pandas as pd
 import glob
 from argparse import Namespace
 from tqdm import tqdm
+import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm
 import torch
 from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
@@ -21,14 +23,17 @@ from .global_analysis import save_prototype_original_img_with_bbox
 
 def save_alignment_matrix(fname, alignment_matrix):
     fig, ax = plt.subplots(figsize=(5, 5))
-    ax.imshow(-alignment_matrix.astype(float))
+    heatmap = alignment_matrix.replace(np.inf, np.nanmax(alignment_matrix[alignment_matrix < np.inf])).astype(float)
+    heatmap = heatmap.div(heatmap.min(axis=1), axis=0)
+    ax.imshow(heatmap, norm=LogNorm(), cmap='viridis_r')
     ax.set_yticks(range(len(alignment_matrix.index)))
     ax.set_yticklabels(alignment_matrix.index)
     ax.set_xticks(range(len(alignment_matrix.columns)))
     ax.set_xticklabels(alignment_matrix.columns)
     for i in range(len(alignment_matrix.index)):
         for j in range(len(alignment_matrix.columns)):
-            ax.text(j, i, f'{alignment_matrix.iloc[i, j]:.0f}', ha='center', va='center', color='w', size='small')
+            txt = f'{alignment_matrix.iloc[i, j]:.0f}' if alignment_matrix.iloc[i, j] < np.inf else '-'
+            ax.text(j, i, txt, ha='center', va='center', color='w', size='small')
     plt.setp(ax.get_xticklabels(), rotation=45, ha='right', rotation_mode='anchor')
     fig.tight_layout()
     fig.savefig(fname)
