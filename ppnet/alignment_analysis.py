@@ -37,6 +37,7 @@ def save_alignment_matrix(fname, alignment_matrix):
     plt.setp(ax.get_xticklabels(), rotation=45, ha='right', rotation_mode='anchor')
     fig.tight_layout()
     fig.savefig(fname)
+    plt.close(fig)
 
 
 def alignment_score(part_locs, high_act_patch_indices):
