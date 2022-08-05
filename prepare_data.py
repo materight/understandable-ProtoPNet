@@ -108,13 +108,13 @@ def generate_celeb_a():
     attributes = (attributes == 1)  # Convert to boolean
     test_split_fraction = 0.3
     subplits = {
-        'multi': ['hair', 'young', 'gender', 'makeup'], # Combination of attributes
         'hair': dict(cols=['Black_Hair', 'Blond_Hair', 'Brown_Hair', 'Gray_Hair', 'Bald']),
         'attractive': dict(col='Attractive', other='Not_Attractive'),
         'young': dict(col='Young', other='Old'),
         'gender': dict(col='Male', other='Female'),
         'smiling': dict(col='Smiling', other='Not_Smiling'),
         'makeup': dict(col='Heavy_Makeup', other='No_Makeup'),
+        'multi': ['hair', 'young', 'gender', 'makeup'], # Combination of attributes
     }
     rng = np.random.default_rng(0)
     for subsplit_name, values in subplits.items():
