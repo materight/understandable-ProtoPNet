@@ -108,6 +108,7 @@ def generate_celeb_a():
     attributes = (attributes == 1)  # Convert to boolean
     test_split_fraction = 0.3
     subplits = {
+        'multi': ['hair', 'young', 'gender', 'makeup'], # Combination of attributes
         'hair': dict(cols=['Black_Hair', 'Blond_Hair', 'Brown_Hair', 'Gray_Hair', 'Bald']),
         'attractive': dict(col='Attractive', other='Not_Attractive'),
         'young': dict(col='Young', other='Old'),
@@ -116,23 +117,37 @@ def generate_celeb_a():
         'makeup': dict(col='Heavy_Makeup', other='No_Makeup'),
     }
     rng = np.random.default_rng(0)
-    for subsplit_name, properties in subplits.items():
+    for subsplit_name, values in subplits.items():
+        # Generate dataset root folder
         subsplit_path = os.path.join(dataset_path, subsplit_name)
         if os.path.exists(subsplit_path):
             shutil.rmtree(subsplit_path)
         os.makedirs(subsplit_path)
-        if 'cols' in properties:  # Multi-class case
-            filtered_attributes = attributes[properties['cols']]
-            filtered_attributes = filtered_attributes[filtered_attributes.sum(axis=1) == 1]  # Discard cases where more than one class is true
-        else:  # Binary-class case
-            filtered_attributes = attributes[properties['col']].to_frame()
-            filtered_attributes[properties['other']] = ~attributes[properties['col']]
-        filtered_attributes = filtered_attributes.idxmax(axis=1).rename('class_name').to_frame()  # Convert from one-hot encoding to class names
-        is_training = rng.choice([True, False], size=len(filtered_attributes), p=[1 - test_split_fraction, test_split_fraction])
-        filtered_attributes['is_training'] = is_training
+        # Handle multi-attributes cases
+        if isinstance(values, list):
+            groups = [subplits[prop] for prop in values]
+        else:
+            groups = [values]
+        # Generate dataset
+        final_filtered_attributes = None
+        for properties in groups:
+            if 'cols' in properties:  # Multi-class case
+                filtered_attributes = attributes[properties['cols']]
+                filtered_attributes = filtered_attributes[filtered_attributes.sum(axis=1) == 1]  # Discard cases where more than one class is true
+            else:  # Binary-class case
+                filtered_attributes = attributes[properties['col']].to_frame()
+                filtered_attributes[properties['other']] = ~attributes[properties['col']]
+            filtered_attributes = filtered_attributes.idxmax(axis=1).rename('class_name').to_frame()  # Convert from one-hot encoding to class names
+            if final_filtered_attributes is None:
+                final_filtered_attributes = filtered_attributes
+            else:
+                final_filtered_attributes['class_name'] += '-' + filtered_attributes['class_name']
+        final_filtered_attributes = final_filtered_attributes.dropna()
+        is_training = rng.choice([True, False], size=len(final_filtered_attributes), p=[1 - test_split_fraction, test_split_fraction])
+        final_filtered_attributes['is_training'] = is_training
         # Create dataset subsplit as hard-links of original images to save space
         os.link(f'{dataset_path}/part_locs.csv', f'{subsplit_path}/part_locs.csv')
-        for sample in tqdm(filtered_attributes.itertuples(), desc=f'Generating "{subsplit_name}" subsplit', total=len(filtered_attributes)):
+        for sample in tqdm(final_filtered_attributes.itertuples(), desc=f'Generating "{subsplit_name}" subsplit', total=len(final_filtered_attributes)):
             sample_path = f'{subsplit_path}/{"train" if sample.is_training else "test"}/{sample.class_name}/{sample.Index}'
             if not os.path.exists(os.path.dirname(sample_path)):
                 os.makedirs(os.path.dirname(sample_path))
