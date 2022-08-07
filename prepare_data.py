@@ -101,6 +101,7 @@ def generate_celeb_a():
     with mp.Pool(mp.cpu_count()) as pool:
         part_locs = list(tqdm(pool.imap_unordered(_get_img_part_loc, masks_filepaths), total=len(masks_filepaths)))
     part_locs = pd.DataFrame(part_locs, columns=['image_id', 'x', 'y', 'part_name'])
+    part_locs[['x', 'y']] *= 2  # Rescale locations since annotated masks are 512x512, images are 1024x1024
     part_locs = part_locs[~part_locs[['x', 'y']].isna().any(axis=1)].astype({'x': int, 'y': int})  # Remove parts with NaN location
     part_locs.to_csv(f'{dataset_path}/part_locs.csv', index=False)
     print('Generating attributes subsplits...')
