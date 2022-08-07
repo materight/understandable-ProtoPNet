@@ -26,7 +26,13 @@ python prune_prototypes.py --dataset [data_path] --model [model_path]
 ```
 
 ## Evaluate learned prototypes
-TODO
+To evaluate a trained model and the learned prototypes, run:
+```shell
+python evaluate.py --model [model_path] {global|local|alignment} --dataset [data_path] 
+```
+- `global`: retrieve for each prototype the most activated patches in the whole dataset.
+- `local`: evaluate the model on a subset of samples and generate visualizations for the activated prototypes for each class.
+- `alignment`: generate plots for the alignment matrix of each class.
 
 ## Acknowledgments
 This implementation is based on the original [ProtoPNet](https://github.com/cfchen-duke/ProtoPNet) repository.
