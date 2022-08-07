@@ -196,6 +196,7 @@ def run_pruning(args: Namespace):
             'clst': 0.8,
             'sep': -0.08,
             'l1': 1e-4,
+            'diversity': 0
         }
 
         log('optimize last layer')
