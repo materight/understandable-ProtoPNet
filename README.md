@@ -20,7 +20,7 @@ python train.py --dataset [data_path] --exp_name [experiment_name]
 ```
 Additional options can be specified (run the script with `--help` to see the available ones).
 
-After training, the learned protoypes can be further pruned to remove duplicates:
+After training, the learned prototypes can be further pruned:
 ```shell
 python prune_prototypes.py --dataset [data_path] --model [model_path]
 ```
