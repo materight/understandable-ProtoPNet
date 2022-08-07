@@ -36,8 +36,9 @@ def save_alignment_matrix(fname, alignment_matrix):
             ax.text(j, i, txt, ha='center', va='center', color='w', size='small')
     plt.setp(ax.get_xticklabels(), rotation=45, ha='right', rotation_mode='anchor')
     fig.tight_layout()
-    fig.savefig(fname)
+    fig.savefig(fname + '.png')
     plt.close(fig)
+    np.save(fname + '.npy', alignment_matrix)
 
 
 def alignment_score(part_locs, high_act_patch_indices):
@@ -156,7 +157,7 @@ def run_analysis(args: Namespace):
                 color=(0, 255, 255),
                 markers=prototype_part_locs.loc[[closest_part], ['x', 'y']].values.tolist()
             )
-        save_alignment_matrix(os.path.join(class_dir, f'alignment_matrix_prototypes.png'), alignment_matrix)
+        save_alignment_matrix(os.path.join(class_dir, f'alignment_matrix_prototypes'), alignment_matrix)
 
         # Compute alignment matrix on class images
         class_image_ids = [(i, img_id) for i, img_id in enumerate(image_ids) if dataset.samples[i][1] == class_idx]
@@ -175,5 +176,5 @@ def run_analysis(args: Namespace):
         alignment_matrix /= alignment_counts
         alignment_matrix[alignment_counts == 0] = np.inf
         # Plot alignment matrix
-        save_alignment_matrix(os.path.join(class_dir, f'alignment_matrix_samples.png'), alignment_matrix)
+        save_alignment_matrix(os.path.join(class_dir, f'alignment_matrix_samples'), alignment_matrix)
     logclose()

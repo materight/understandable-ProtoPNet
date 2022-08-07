@@ -240,7 +240,7 @@ def _run_analysis_on_image(args: Namespace):
         # Compute alignment matrix
         alignment_matrix.loc[sorted_indices_act[-i].item(), :] = alignment_score(part_locs, high_act_patch_indices)
     # Plot alignment matrix
-    save_alignment_matrix(os.path.join(out_dir, f'top-prototypes_alignment_matrix.png'), alignment_matrix)
+    save_alignment_matrix(os.path.join(out_dir, f'top-prototypes_alignment_matrix'), alignment_matrix)
     # PROTOTYPES FROM TOP-k CLASSES
     k = min(args.top_classes, len(dataset.classes))
     log('Prototypes from top-%d classes:' % k)
@@ -303,7 +303,7 @@ def _run_analysis_on_image(args: Namespace):
             # Compute alignment matrix
             alignment_matrix.loc[prototype_index, :] = alignment_score(part_locs, high_act_patch_indices)
         # Plot alignment matrix
-        save_alignment_matrix(os.path.join(class_dir, f'top-prototypes_alignment_matrix.png'), alignment_matrix)
+        save_alignment_matrix(os.path.join(class_dir, f'top-prototypes_alignment_matrix'), alignment_matrix)
 
     if predicted_cls == correct_cls:
         log('Prediction is correct.')
