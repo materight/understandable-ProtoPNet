@@ -1,4 +1,4 @@
-# ProtoPNet: are learned concepts understandable?
+# ProtoPNet: Are Learned Concepts Understandable?
 
 ## Get started
 - Clone the repository and install the required dependencies:
