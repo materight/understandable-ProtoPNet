@@ -2,27 +2,23 @@
 A study on the interpretability of the concepts learned by [Prototypical Part Networks](https://arxiv.org/abs/1806.10574) (ProtoPNets). This work exploits the part locations annotations available for two different datasets to provide an objective evalution of the prototypes. An additional *diversity regularization* is also introduced to produce more diverse concepts. More details on the implementation can be found in the report[TODO].
 
 <div align="center">
-    <img src="img/cub200/alignment_matrix_prototypes.png" width="100%"/>
+    <img src="img/cub200/alignment_matrix_prototypes.png" width="40%"/>
+    &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp;
+    <img src="img/celeb_a/alignment_matrix_prototypes.png" width="40%"/>
 </div>
 <div align="center">
-    <img src="img/cub200/1_prototype_580_bbox.jpg" width="18%"/>
-    <img src="img/cub200/4_prototype_583_bbox.jpg" width="18%"/>
-    <img src="img/cub200/6_prototype_585_bbox.jpg" width="18%"/>
-    <img src="img/cub200/8_prototype_587_bbox.jpg" width="18%"/>
-    <img src="img/cub200/9_prototype_588_bbox.jpg" width="18%"/>
+    <img src="img/cub200/1_prototype_580_bbox.jpg" width="8%"/>
+    <img src="img/cub200/4_prototype_583_bbox.jpg" width="8%"/>
+    <img src="img/cub200/6_prototype_585_bbox.jpg" width="8%"/>
+    <img src="img/cub200/8_prototype_587_bbox.jpg" width="8%"/>
+    <img src="img/cub200/9_prototype_588_bbox.jpg" width="8%"/>
+    &nbsp; &nbsp; &nbsp; &nbsp;
+    <img src="img/celeb_a/prototype_2_bbox.jpg" width="8%"/>
+    <img src="img/celeb_a/prototype_3_bbox.jpg" width="8%"/>
+    <img src="img/celeb_a/prototype_4_bbox.jpg" width="8%"/>
+    <img src="img/celeb_a/prototype_6_bbox.jpg" width="8%"/>
+    <img src="img/celeb_a/prototype_7_bbox.jpg" width="8%"/>
 </div>
-
-<div align="center">
-    <img src="img/celeb_a/alignment_matrix_prototypes.png" width="100%"/>
-</div>
-<div align="center">
-    <img src="img/celeb_a/prototype_2_bbox.jpg" width="18%"/>
-    <img src="img/celeb_a/prototype_3_bbox.jpg" width="18%"/>
-    <img src="img/celeb_a/prototype_4_bbox.jpg" width="18%"/>
-    <img src="img/celeb_a/prototype_6_bbox.jpg" width="18%"/>
-    <img src="img/celeb_a/prototype_7_bbox.jpg" width="18%"/>
-</div>
-
 
 
 ## Get started
