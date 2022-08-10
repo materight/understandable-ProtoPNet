@@ -3,7 +3,7 @@ A study on the interpretability of the concepts learned by [Prototypical Part Ne
 
 This work exploits the part locations annotations available for two different datasets to provide an objective evalution of the prototypes. An additional *diversity regularization* is also introduced to produce more diverse concepts. 
 
-More details on the implementation can be found in the report[TODO].
+More details on the implementation can be found in the [report](report.pdf).
 
 <table>
     <tr align="center">
