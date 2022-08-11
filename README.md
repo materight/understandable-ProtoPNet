@@ -17,11 +17,11 @@ More details on the implementation can be found in the [report](report.pdf).
             <img src="img/cub200/8_prototype_587_bbox.jpg" width="18%"/>
             <img src="img/cub200/9_prototype_588_bbox.jpg" width="18%"/>
             <br/>
-                             <sup>580</sup><img width="7%"/>
-            <img width="7%"/><sup>583</sup><img width="7%"/>
-            <img width="7%"/><sup>585</sup><img width="7%"/>
-            <img width="7%"/><sup>587</sup><img width="7%"/>
-            <img width="7%"/><sup>588</sup>
+                             <sup>580</sup><img width="6.5%"/>
+            <img width="6.5%"/><sup>583</sup><img width="6.5%"/>
+            <img width="6.5%"/><sup>585</sup><img width="6.5%"/>
+            <img width="6.5%"/><sup>587</sup><img width="6.5%"/>
+            <img width="6.5%"/><sup>588</sup>
         </td>
         <td valign="top">
             <div><i>Female</i> class<div>
