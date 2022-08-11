@@ -16,6 +16,12 @@ More details on the implementation can be found in the [report](report.pdf).
             <img src="img/cub200/6_prototype_585_bbox.jpg" width="18%"/>
             <img src="img/cub200/8_prototype_587_bbox.jpg" width="18%"/>
             <img src="img/cub200/9_prototype_588_bbox.jpg" width="18%"/>
+            <br/>
+                             <sup>580</sup><img width="7%"/>
+            <img width="7%"/><sup>583</sup><img width="7%"/>
+            <img width="7%"/><sup>585</sup><img width="7%"/>
+            <img width="7%"/><sup>587</sup><img width="7%"/>
+            <img width="7%"/><sup>588</sup>
         </td>
         <td valign="top">
             <div><i>Female</i> class<div>
@@ -26,10 +32,15 @@ More details on the implementation can be found in the [report](report.pdf).
             <img src="img/celeb_a/prototype_4_bbox.jpg" width="18%"/>
             <img src="img/celeb_a/prototype_6_bbox.jpg" width="18%"/>
             <img src="img/celeb_a/prototype_7_bbox.jpg" width="18%"/>
+            <br/>
+                             <sup>2</sup><img width="8%"/>
+            <img width="8%"/><sup>3</sup><img width="8%"/>
+            <img width="8%"/><sup>4</sup><img width="8%"/>
+            <img width="8%"/><sup>6</sup><img width="8%"/>
+            <img width="8%"/><sup>7</sup>
         </td>
     </tr>
 </table>
-
 
 
 ## Get started
