@@ -46,7 +46,7 @@ More details on the implementation can be found in the [report](report.pdf).
 ## Get started
 - Clone the repository and install the required dependencies:
     ```shell
-    git clone https://github.com/materight/https://github.com/materight/explainable-ProtoPNet.git
+    git clone https://github.com/materight/explainable-ProtoPNet.git
     cd explainable-ProtoPNet
     pip install -r requirements.txt
     ```
